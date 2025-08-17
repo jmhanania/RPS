@@ -1,16 +1,19 @@
-# RPS (Rock Paper Scissors)
+# Rock Paper Scissors (RPS)
 
-A Python-based Rock Paper Scissors game with adaptive AI opponents, player profiles, and persistent statistics.
+A simple Python Rock Paper Scissors game with a twist:  
+it saves your stats, supports multiple player profiles,  
+and has different AI opponents to keep things interesting.
+
+## How to Play
+1. Clone or download this repo.  
+2. Run the game:  
+   ```bash
+   python run_rps.py
+
+Follow the prompts to pick your profile and play.
 
 ## Features
-- Multiple AI strategies (adaptive, tricky, Markov-based)
-- Player profiles with saved stats and configurations
-- Configurable difficulty and match length
-- Lightweight — runs entirely in Python
-- Option to build into a standalone `.exe` with PyInstaller
-
-## Installation
-Clone the repository:
-```bash
-git clone https://github.com/your-username/rps.git
-cd rps
+1. Multiple AI strategies (adaptive, tricky, Markov-based).  
+2. Player profiles with saved stats.  
+3. Configurable options (match length, AI type).  
+4. Runs on plain Python — no extra installs needed.  
