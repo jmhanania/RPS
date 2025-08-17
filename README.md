@@ -1,11 +1,16 @@
-# RPS (Rock, Paper, Scissors)
+# RPS (Rock Paper Scissors)
 
-A Python-based Rock-Paper-Scissors game with:
-- Profiles
-- AI opponent
-- Persistence (stats & config saved in JSON)
-- Reports
+A Python-based Rock Paper Scissors game with adaptive AI opponents, player profiles, and persistent statistics.
 
-## How to Run
+## Features
+- Multiple AI strategies (adaptive, tricky, Markov-based)
+- Player profiles with saved stats and configurations
+- Configurable difficulty and match length
+- Lightweight — runs entirely in Python
+- Option to build into a standalone `.exe` with PyInstaller
+
+## Installation
+Clone the repository:
 ```bash
-python run_rps.py
+git clone https://github.com/your-username/rps.git
+cd rps

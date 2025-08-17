@@ -1,0 +1,1 @@
+# Allows running as a package: python -m rps.main
