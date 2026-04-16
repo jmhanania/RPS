@@ -1,19 +1,42 @@
-# Rock Paper Scissors (RPS)
+# Rock Paper Scissors
 
-A simple Python Rock Paper Scissors game with a twist:  
-it saves your stats, supports multiple player profiles,  
-and has different AI opponents to keep things interesting.
+A Rock Paper Scissors game with multiple AI difficulty levels, player profiles, and persistent stats. Available as both a browser-based web app and a Python CLI.
 
-## How to Play
-1. Clone or download this repo.  
-2. Run the game:  
-   ```bash
-   python run_rps.py
+## Web App
 
-Follow the prompts to pick your profile and play.
+Open `web/index.html` in any browser — no server, no install required.
 
-## Features
-1. Multiple AI strategies (adaptive, tricky, Markov-based).  
-2. Player profiles with saved stats.  
-3. Configurable options (match length, AI type).  
-4. Runs on plain Python — no extra installs needed.  
+**Features:**
+- Four AI difficulty levels: Random, Adaptive, Tricky, and Markov (learns your patterns across sessions)
+- Multiple player profiles with stats saved in your browser
+- Match lengths: Best of 3 / 5 / 7 / 9, or Infinite
+- AI commentary modes: Off, Analysis (see the AI's reasoning), or Trash Talk 🔥
+- Stats screen showing move frequency and transition patterns
+
+## Python CLI
+
+```bash
+python run_rps.py
+```
+
+Requires Python 3.10+. No external dependencies.
+
+## AI Difficulty Levels
+
+| Level | Strategy |
+|-------|----------|
+| 1 – Random | Pure random |
+| 2 – Adaptive | Counters your most common move (20% randomness) |
+| 3 – Tricky | Weights your recent moves more heavily (25% randomness) |
+| 4 – Markov | Learns your move sequences using order-1 and order-2 Markov chains, blending live and historical stats (20% randomness) |
+
+## Development
+
+```bash
+# Run tests
+pytest
+
+# Lint
+flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+```
