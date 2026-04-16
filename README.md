@@ -4,7 +4,7 @@ A Rock Paper Scissors game with multiple AI difficulty levels, player profiles, 
 
 ## Web App
 
-Open `web/index.html` in any browser — no server, no install required.
+Open `index.html` in any browser — no server, no install required.
 
 **Features:**
 - Four AI difficulty levels: Random, Adaptive, Tricky, and Markov (learns your patterns across sessions)
