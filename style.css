@@ -447,6 +447,12 @@ input[type="checkbox"] { accent-color: var(--accent); width: 15px; height: 15px;
 .stats-table thead th { color: var(--muted); font-weight: 500; background: var(--surface2); }
 .stats-table tbody th { font-weight: 600; color: var(--muted); background: var(--surface2); text-align: left; }
 
+/* ── Leaderboard ──────────────────────────────────────────────────────────── */
+.lb-loading { text-align: center; color: var(--muted); padding: 24px; }
+.lb-rank    { font-size: 1rem; width: 40px; }
+.lb-name    { text-align: left !important; font-weight: 600; }
+.lb-moves   { font-size: 0.72rem; color: var(--muted); white-space: nowrap; }
+
 /* ── Animations ───────────────────────────────────────────────────────────── */
 @keyframes pop-in {
   0%   { transform: scale(.4); opacity: 0; }
