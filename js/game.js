@@ -55,7 +55,7 @@ const LB_COLS = [
 
 let db = null;
 let currentLbDiff = 0;
-let currentLbSort = { field: 'wins', dir: 'desc' };
+let currentLbSort = { field: 'pct', dir: 'desc' };
 
 try {
   firebase.initializeApp(firebaseConfig);
