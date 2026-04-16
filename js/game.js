@@ -20,6 +20,12 @@ const defaultStats = () => ({
     scissors: { rock: 0, paper: 0, scissors: 0 },
   },
   order2: {},
+  by_difficulty: {
+    1: { wins: 0, losses: 0, ties: 0 },
+    2: { wins: 0, losses: 0, ties: 0 },
+    3: { wins: 0, losses: 0, ties: 0 },
+    4: { wins: 0, losses: 0, ties: 0 },
+  },
 });
 
 const defaultConfig = () => ({ best_of: 5, difficulty: 4, commentary: 'off' });
@@ -425,12 +431,7 @@ function renderProfileScreen() {
   const list  = $('profile-list');
   list.innerHTML = '';
   const names = profileNames();
-  if (!names.length) {
-    const msg = document.createElement('p');
-    msg.className   = 'empty-msg';
-    msg.textContent = 'No profiles yet — create one below.';
-    list.appendChild(msg);
-  }
+  $('profile-divider').style.display = names.length ? '' : 'none';
   for (const name of names) {
     const row = document.createElement('div');
     row.className = 'profile-row';
@@ -672,6 +673,20 @@ function endMatch() {
   $('mop-title').textContent    = won ? 'You Won!' : tied ? "It's a Tie!" : 'Computer Wins';
   $('mop-subtitle').textContent = contextText;
 
+  // Record match result by difficulty (only if at least one round played)
+  if (match.roundHistory.length > 0) {
+    const stats = activeStats();
+    if (!stats.by_difficulty) {
+      stats.by_difficulty = { 1:{wins:0,losses:0,ties:0}, 2:{wins:0,losses:0,ties:0}, 3:{wins:0,losses:0,ties:0}, 4:{wins:0,losses:0,ties:0} };
+    }
+    const d = match.difficulty;
+    if (!stats.by_difficulty[d]) stats.by_difficulty[d] = { wins: 0, losses: 0, ties: 0 };
+    if (won) stats.by_difficulty[d].wins++;
+    else if (tied) stats.by_difficulty[d].ties++;
+    else stats.by_difficulty[d].losses++;
+    saveAll();
+  }
+
   // Swap choice buttons for the panel, hide End Game CTA
   $('choices-row').style.display      = 'none';
   $('round-history').style.display    = 'none';
@@ -710,6 +725,24 @@ function renderStatsScreen() {
       + '<div class="stat-pct">'   + pct + '%</div>'
       + '</div>';
   }).join('');
+
+  const diffNames = { 1: 'Random', 2: 'Adaptive', 3: 'Tricky', 4: 'Markov' };
+  const byDiff = stats.by_difficulty || {};
+  $('stats-diff').innerHTML =
+    '<thead><tr><th style="text-align:left">Difficulty</th><th>W</th><th>L</th><th>T</th><th>Win %</th></tr></thead><tbody>'
+    + [1, 2, 3, 4].map(function(d) {
+        const r = byDiff[d] || { wins: 0, losses: 0, ties: 0 };
+        const played = r.wins + r.losses + r.ties;
+        const pct = played > 0 ? Math.round(r.wins / played * 100) + '%' : '—';
+        return '<tr>'
+          + '<td style="text-align:left">' + d + ' – ' + diffNames[d] + '</td>'
+          + '<td style="color:var(--win)">'  + r.wins   + '</td>'
+          + '<td style="color:var(--loss)">' + r.losses + '</td>'
+          + '<td style="color:var(--tie)">'  + r.ties   + '</td>'
+          + '<td>' + pct + '</td>'
+          + '</tr>';
+      }).join('')
+    + '</tbody>';
 
   $('stats-order1').innerHTML =
     '<thead><tr><th>After ↓ / Next →</th>'
