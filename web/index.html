@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rock Paper Scissors</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- ── Profile selection ─────────────────────────────────────────────── -->
+  <div id="screen-profile" class="screen">
+    <div class="card">
+      <p class="wordmark">✊🖐️✌️</p>
+      <h1>Rock Paper Scissors</h1>
+      <p class="sub" style="text-align:center;margin-top:4px;">Who's playing?</p>
+
+      <div id="profile-list" class="profile-list"></div>
+
+      <div class="divider">or create new</div>
+
+      <div class="input-row">
+        <input type="text" id="new-profile-name" placeholder="Your name…" maxlength="24" autocomplete="off">
+        <button id="btn-create-profile" class="btn-primary">Go</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Settings ──────────────────────────────────────────────────────── -->
+  <div id="screen-settings" class="screen">
+    <div class="card">
+      <h2>Settings</h2>
+      <p class="sub">Playing as <strong id="settings-profile-name"></strong></p>
+
+      <div class="setting-block">
+        <h3>Match length</h3>
+        <div class="radio-group">
+          <label class="radio-pill"><input type="radio" name="best_of" value="3"> Best of 3</label>
+          <label class="radio-pill"><input type="radio" name="best_of" value="5"> Best of 5</label>
+          <label class="radio-pill"><input type="radio" name="best_of" value="7"> Best of 7</label>
+          <label class="radio-pill"><input type="radio" name="best_of" value="9"> Best of 9</label>
+        </div>
+      </div>
+
+      <div class="setting-block">
+        <h3>AI difficulty</h3>
+        <div class="radio-group">
+          <label class="radio-pill"><input type="radio" name="difficulty" value="1"> 1 – Random</label>
+          <label class="radio-pill"><input type="radio" name="difficulty" value="2"> 2 – Adaptive</label>
+          <label class="radio-pill"><input type="radio" name="difficulty" value="3"> 3 – Tricky</label>
+          <label class="radio-pill"><input type="radio" name="difficulty" value="4"> 4 – Markov</label>
+        </div>
+      </div>
+
+      <div class="setting-block">
+        <label class="toggle-row">
+          <input type="checkbox" id="debug-toggle">
+          Show AI reasoning after each round
+        </label>
+      </div>
+
+      <div class="btn-row">
+        <button id="btn-settings-back" class="btn-secondary">← Back</button>
+        <button id="btn-settings-play" class="btn-primary">Play →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Game ──────────────────────────────────────────────────────────── -->
+  <div id="screen-game" class="screen">
+
+    <header class="game-header">
+      <button id="btn-menu"       class="btn-ghost" title="Switch profile">☰</button>
+      <span   id="match-label"    class="match-label"></span>
+      <button id="btn-game-stats" class="btn-ghost" title="Stats">📊</button>
+    </header>
+
+    <!-- Scoreboard -->
+    <div class="scoreboard">
+      <div class="score-block">
+        <div class="score-name" id="player-name-display">You</div>
+        <div class="score-num"  id="player-score">0</div>
+      </div>
+      <span class="score-sep">vs</span>
+      <div class="score-block">
+        <div class="score-name">Computer</div>
+        <div class="score-num" id="computer-score">0</div>
+      </div>
+    </div>
+
+    <!-- Result area -->
+    <div id="result-area" class="result-area idle">
+      <div id="result-row" class="result-row" style="display:none">
+        <div class="choice-display">
+          <span id="player-choice-display"   class="choice-emoji"></span>
+          <span class="choice-sub">You</span>
+        </div>
+        <span id="result-outcome" class="result-outcome"></span>
+        <div class="choice-display">
+          <span id="computer-choice-display" class="choice-emoji"></span>
+          <span class="choice-sub">Computer</span>
+        </div>
+      </div>
+      <p id="idle-prompt" class="idle-prompt">Make your move ↓</p>
+      <div id="debug-info" class="debug-info" style="display:none"></div>
+    </div>
+
+    <!-- Choice buttons -->
+    <div class="choices-row">
+      <button class="choice-btn" data-move="rock">✊<span>Rock</span></button>
+      <button class="choice-btn" data-move="paper">🖐️<span>Paper</span></button>
+      <button class="choice-btn" data-move="scissors">✌️<span>Scissors</span></button>
+    </div>
+
+    <!-- Round pip history -->
+    <div id="round-history" class="round-history"></div>
+
+  </div>
+
+  <!-- ── Match over ─────────────────────────────────────────────────────── -->
+  <div id="screen-match-over" class="screen">
+    <div class="card">
+      <div id="match-result-icon"     class="match-over-icon"></div>
+      <h2  id="match-result-title"></h2>
+      <p   id="match-result-subtitle"></p>
+      <div class="btn-col">
+        <button id="btn-play-again"      class="btn-primary">Play Again</button>
+        <button id="btn-match-stats"     class="btn-secondary">View Stats</button>
+        <button id="btn-change-settings" class="btn-secondary">Change Settings</button>
+        <button id="btn-switch-player"   class="btn-secondary">Switch Player</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Stats ─────────────────────────────────────────────────────────── -->
+  <div id="screen-stats" class="screen">
+    <div class="card stats-card">
+      <h2>Stats</h2>
+      <p class="sub" id="stats-profile-name"></p>
+
+      <div class="stats-section">
+        <h3>All-time move totals</h3>
+        <div id="stats-totals" class="totals-grid"></div>
+      </div>
+
+      <div class="stats-section">
+        <h3>What you throw after each move</h3>
+        <table id="stats-order1" class="stats-table"></table>
+      </div>
+
+      <button id="btn-stats-back" class="btn-primary">← Back</button>
+    </div>
+  </div>
+
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
