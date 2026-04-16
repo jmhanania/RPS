@@ -448,6 +448,7 @@ input[type="checkbox"] { accent-color: var(--accent); width: 15px; height: 15px;
 .stats-table tbody th { font-weight: 600; color: var(--muted); background: var(--surface2); text-align: left; }
 
 /* ── Leaderboard ──────────────────────────────────────────────────────────── */
+#screen-leaderboard { max-width: 640px; }
 .lb-tabs  { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
 .lb-tab {
   padding: 6px 14px;
