@@ -111,6 +111,22 @@ h3 { font-size: 0.8rem; font-weight: 600; color: var(--muted); text-transform: u
 
 .profile-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 4px; }
 
+.profile-row { display: flex; align-items: center; gap: 6px; }
+.profile-row .profile-btn { flex: 1; }
+.profile-delete-btn {
+  flex-shrink: 0;
+  background: none;
+  border: 1px solid transparent;
+  border-radius: var(--r-sm);
+  color: var(--loss);
+  font-size: 1rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 10px 11px;
+  transition: border-color .15s, background .15s;
+}
+.profile-delete-btn:hover { border-color: var(--loss); background: rgba(239,68,68,.1); }
+
 .profile-btn {
   display: flex;
   align-items: center;
@@ -138,22 +154,19 @@ h3 { font-size: 0.8rem; font-weight: 600; color: var(--muted); text-transform: u
 .empty-msg { color: var(--muted); font-size: 0.88rem; text-align: center; padding: 8px 0; }
 
 .divider {
-  position: relative;
-  text-align: center;
+  display: flex;
+  align-items: center;
+  gap: 12px;
   color: var(--muted);
   font-size: 0.8rem;
   margin: 18px 0;
 }
 .divider::before, .divider::after {
   content: '';
-  position: absolute;
-  top: 50%;
-  width: 44%;
+  flex: 1;
   height: 1px;
   background: var(--border);
 }
-.divider::before { left: 0; }
-.divider::after  { right: 0; }
 
 .input-row { display: flex; gap: 8px; }
 input[type="text"] {

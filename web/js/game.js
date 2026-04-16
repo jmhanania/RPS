@@ -432,6 +432,9 @@ function renderProfileScreen() {
     list.appendChild(msg);
   }
   for (const name of names) {
+    const row = document.createElement('div');
+    row.className = 'profile-row';
+
     const btn = document.createElement('button');
     btn.className = 'profile-btn';
     const last = store.config.last_profile === name;
@@ -439,8 +442,29 @@ function renderProfileScreen() {
       + '<span class="profile-name">' + name + '</span>'
       + (last ? '<span class="profile-badge">last played</span>' : '');
     btn.addEventListener('click', function() { enterProfile(name); });
-    list.appendChild(btn);
+
+    const del = document.createElement('button');
+    del.className = 'profile-delete-btn';
+    del.title     = 'Delete profile';
+    del.textContent = '🗑️';
+    del.addEventListener('click', function(e) {
+      e.stopPropagation();
+      deleteProfile(name);
+    });
+
+    row.appendChild(btn);
+    row.appendChild(del);
+    list.appendChild(row);
   }
+}
+
+function deleteProfile(name) {
+  if (!confirm('Delete "' + name + '"? This cannot be undone.')) return;
+  delete store.stats.profiles[name];
+  delete store.config.profiles[name];
+  if (store.config.last_profile === name) store.config.last_profile = null;
+  saveAll();
+  renderProfileScreen();
 }
 
 function enterProfile(name) {
@@ -523,10 +547,11 @@ function startMatch() {
   $('round-history').innerHTML          = '';
   $('debug-info').style.display         = 'none';
 
-  // Hide match-over panel, show choice buttons
+  // Hide match-over panel, show choice buttons and End Game CTA
   $('match-over-panel').style.display = 'none';
   $('choices-row').style.display      = '';
   $('round-history').style.display    = '';
+  $('btn-end-game').style.display     = '';
 
   setChoicesDisabled(false);
   show('screen-game');
@@ -647,10 +672,11 @@ function endMatch() {
   $('mop-title').textContent    = won ? 'You Won!' : tied ? "It's a Tie!" : 'Computer Wins';
   $('mop-subtitle').textContent = contextText;
 
-  // Swap choice buttons for the panel
+  // Swap choice buttons for the panel, hide End Game CTA
   $('choices-row').style.display      = 'none';
   $('round-history').style.display    = 'none';
   $('match-over-panel').style.display = 'block';
+  $('btn-end-game').style.display     = 'none';
 }
 
 $('mop-play-again').addEventListener('click', startMatch);
