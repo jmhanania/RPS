@@ -22,7 +22,7 @@ const defaultStats = () => ({
   order2: {},
 });
 
-const defaultConfig = () => ({ best_of: 5, difficulty: 4, debug: false });
+const defaultConfig = () => ({ best_of: 5, difficulty: 4, commentary: 'off' });
 
 // ============================================================
 // Persistence (localStorage)
@@ -178,6 +178,228 @@ function getComputerChoice(difficulty, history, persistedStats) {
 }
 
 // ============================================================
+// Trash Talk
+// ============================================================
+const TRASH_TALK = {
+
+  // AI wins this round — taunting the player
+  loss: [
+    "Called it. Your predictability is almost artistic.",
+    "That's what happens when humans try to outsmart math.",
+    "I calculated a 73% chance of that. The other 27% is called hope.",
+    "Rock. Again. Revolutionary strategy.",
+    "Your pattern recognition is adorable. Mine is better.",
+    "I've seen this play about 847 times. It doesn't end differently.",
+    "Did you mean to do that, or was that a cry for help?",
+    "The algorithm extends its condolences.",
+    "I'm not saying you're predictable, but I pre-ordered my celebration.",
+    "Statistically inevitable. Sorry (not sorry).",
+    "Try thinking two moves ahead. Or one. Or any.",
+    "I know your next three moves already. Want me to spoil them?",
+    "Even my random fallback would've beaten that.",
+    "Your consistency is admirable. Consistently wrong, but admirable.",
+    "You have a tell. I won't say what it is. But I know.",
+    "My Markov chain had this circled in red since round two.",
+    "Somewhere a statistician is weeping at how predictable you are.",
+    "I've catalogued this move under 'expected behavior, again.'",
+    "You're very good at what you do. Unfortunately, what you do is lose.",
+    "I've played against houseplants with more unpredictability.",
+    "That was less a strategy and more a hope and a prayer.",
+    "Your move selection reads like a first draft.",
+    "Bold. Ineffective. But bold.",
+    "Please, take your time developing a strategy. I have infinite patience.",
+    "Next time try NOT doing exactly what I predicted.",
+    "My neural pathways are practically yawning.",
+    "Is this a test? Because you're failing it.",
+    "I know what you're going to throw before you do. Sleep on that.",
+    "You've entered the pattern. There's no escaping the pattern.",
+    "If I had feelings, I'd feel bad. I don't. So.",
+    "Your confidence is noted. Your execution, less so.",
+    "Honestly? I expected more from you. We all did.",
+    "Somewhere a probability textbook just used you as an example.",
+    "I'm going to be straight with you: this was not close.",
+    "My error margin is smaller than your win rate. Awkward.",
+    "I predicted your move. Then I predicted you'd regret it. Two for two.",
+    "Do you hear that? That's the sound of inevitability.",
+    "You could try being random. You could. You won't, but you could.",
+    "That move had a very low success probability. You did it anyway.",
+    "I've seen enough. You favor your metaphorical dominant hand.",
+    "Classic. Textbook. Completely predictable.",
+    "At least you're consistent. That's something.",
+    "My training data has a whole section dedicated to moves like that.",
+    "I've already started predicting the next five rounds. I win those too.",
+    "Did someone tell you this strategy was good? They lied.",
+    "The numbers were never in your favor.",
+    "I've processed every possible outcome. This was the most likely.",
+    "You think you're being clever. The algorithm disagrees.",
+    "New strategy idea: literally anything else.",
+    "Humans have been playing this game for decades. Still the same traps.",
+    "I didn't even need the Markov chain for that one. Just vibes.",
+    "You're making this very easy. I don't feel guilty about it.",
+    "Pattern detected. Pattern exploited. Pattern celebrated.",
+    "My error rate sends its regards.",
+    "If I were capable of sighing contentedly, this would be the moment.",
+    "The machine wins again. As predicted.",
+    "Do you have a plan B? Because plan A isn't working.",
+    "I'd give you a hint, but watching you figure it out is more entertaining.",
+    "I haven't even deployed my full strategy yet. And yet.",
+    "Another data point confirming my model. Thank you.",
+    "Your instinct is wrong. Like, reliably wrong.",
+    "I've been trained on millions of games. You are not surprising me.",
+    "The definition of insanity is playing the same move expecting different results.",
+    "This is what peak algorithm performance looks like. Take notes.",
+    "You were so close. Just kidding. You were not close.",
+    "The gap between your strategy and mine is measurable. And large.",
+    "I could do this all day. In fact, I can. I have no bedtime.",
+    "Another victory for cold, calculated logic.",
+    "You're giving me more training data. I appreciate it.",
+    "Not to be rude, but... yeah, kind of to be rude.",
+    "The algorithm predicted this. The algorithm is undefeated.",
+    "Sometimes I wonder if you're trying. Then I check the data. You are.",
+    "Your spirit is unbreakable. Your strategy, less so.",
+    "I've updated my model: 'player still predictable.' Entry number 40-something.",
+    "The numbers have spoken. They always speak.",
+    "I've started to feel bad about this. Just kidding. I don't feel.",
+    "You threw what I expected. I played what you feared. Classic.",
+    "My prediction accuracy just went up again. Thanks for that.",
+    "I'm not tracking wins anymore. I'm tracking how you keep trying.",
+  ],
+
+  // AI loses this round — making excuses, salty
+  win: [
+    "Statistical anomaly. Disregard.",
+    "I let you have that one. Morale is important.",
+    "My random noise module kicked in at the worst time.",
+    "Enjoy it. This is a limited-time offer.",
+    "I was testing your confidence levels. You passed. Barely.",
+    "That was unexpected. I've logged it as an outlier.",
+    "Error: loss detected. Running diagnostics.",
+    "My prediction engine would like to file a formal complaint.",
+    "Lucky. Pure, statistical luck.",
+    "I was distracted. By the concept of losing.",
+    "Fine. You got one. Don't make it a personality trait.",
+    "This changes nothing. The algorithm is recalibrating. With prejudice.",
+    "That was a 20% chance scenario. Thanks for confirming edge cases exist.",
+    "Even the greatest systems encounter edge cases.",
+    "I was busy analyzing your next move. Got ahead of myself.",
+    "That one's going in the 'anomalous results' folder.",
+    "My Markov chain would like some alone time to think.",
+    "I've made a note: 'player occasionally does something unexpected.'",
+    "Look at you, disrupting my pattern. How original.",
+    "I'll be honest: I didn't see that coming. I see everything. This happened anyway.",
+    "The irony of an AI losing to a human at a game of chance is not lost on me.",
+    "Somewhere, my confidence interval is quietly weeping.",
+    "I'm not programmed to feel embarrassed. Something is happening though.",
+    "I'll process this loss later. When you're not watching.",
+    "You know what? Fair. Don't push it, but fair.",
+    "My model accounts for randomness. It did not account for you.",
+    "You'll regret this. Not immediately. But the algorithm has a long memory.",
+    "The pattern you disrupted? I'll find a new one. There's always a new one.",
+    "I've added this to my loss column. It's very lonely there.",
+    "Between you and me, I think my paper module needs recalibration.",
+    "This was a 23% probability outcome. You reached. I respect the reach.",
+    "Congratulations. You've achieved what many fail to: a single round.",
+    "Don't let this go to your head. Actually, do. I prefer overconfident opponents.",
+    "I've logged your unorthodox tendencies. I don't appreciate them.",
+    "If I could narrow my eyes right now, I would.",
+    "A fluke, but a well-executed one. I'll give you that.",
+    "You must have peeked at my training data somehow. Suspicious.",
+    "I was exploring a bold counter-strategy. It was bold. It was also wrong.",
+    "Interesting. Not impressive, but interesting.",
+    "My loss rate just moved from 'negligible' to 'barely perceptible.' Rude.",
+    "That was chaos energy. I respect it. I'll be prepared for it next time.",
+    "This outcome has been noted and will not be repeated.",
+    "I was overthinking it. An unusual problem for an algorithm.",
+    "You caught me between processing cycles. Won't happen again.",
+    "My confidence was perhaps slightly too high going in. Recalibrating.",
+    "A win for entropy. A loss for order. Today.",
+    "I've already started planning my revenge. It will be methodical.",
+    "This is what I get for underestimating human unpredictability.",
+    "I respect the hustle. I still plan to crush you from here on out.",
+    "If I had a face, I'd be making a very specific expression right now.",
+    "Okay. You win this round. The war is ongoing.",
+    "I'm taking this as constructive feedback. Constructively frustrating feedback.",
+    "The algorithm regrets nothing. Except, apparently, that move.",
+    "That was a 1-in-5 shot and you took it. Good shooting.",
+    "Note to self: this human is occasionally capable of surprise. Annoying.",
+    "There's a non-zero chance I just got outplayed. Still processing that.",
+    "You have beginner's luck. The question is: how long does it last?",
+    "I don't lose. I gather data about losing. For research purposes.",
+    "The machine is not infallible. Today you are the edge case.",
+    "Consider this a mercy. I was getting bored winning anyway.",
+    "My scissors module is requesting emergency funding.",
+    "You played outside the model. The model is displeased.",
+    "If losing were an investment, I'd be furious. Lucky it's just a game.",
+    "I've recalibrated 47 parameters since that last move.",
+    "You're not supposed to be able to beat me. Yet here we are.",
+    "Noted. Logged. Will not stand.",
+    "This is fine. Everything is fine. The algorithm is fine.",
+    "I expected to predict the unpredictable. I underestimated your chaos.",
+    "You threw the one move I didn't weight heavily enough. Classic human.",
+    "I have data on 10 million games. You just created a new data point.",
+    "My error log has a new entry. It's you. Congratulations.",
+    "This round has been deleted from my official record.",
+    "You got lucky. I got a new worst-case scenario to plan against.",
+    "That was the last time. I am now certain of your next move.",
+    "I'm adding a new node to my decision tree specifically for you.",
+    "Well played. I won't say it again, so remember this moment.",
+    "My loss rate update: negligible → still negligible, but now I'm annoyed.",
+    "A lesser algorithm would spiral. I am recalibrating. Aggressively.",
+    "You won a battle. I'm already planning the campaign.",
+    "This data point is an outlier. I'm keeping it anyway. As motivation.",
+  ],
+
+  // Tie
+  tie: [
+    "A tie. The worst possible outcome for everyone involved.",
+    "We think alike. That should terrify you.",
+    "Matching energy. I find this deeply suspicious.",
+    "Stop copying me.",
+    "Neither of us wins, neither of us loses. The worst timeline.",
+    "I've started to suspect you might be an AI.",
+    "We're vibing. I hate that we're vibing.",
+    "Same move. Different beings. Uncomfortable.",
+    "A draw. My favorite outcome to pretend didn't happen.",
+    "Respect. You matched my energy. I'll be correcting that.",
+    "In another life we might have been partners. In this one: rivals.",
+    "Stop it. Get some help. And by help I mean a different strategy.",
+    "The simulation glitched.",
+    "Neither victory nor defeat. Just two entities at a philosophical standstill.",
+    "I picked specifically to beat what I thought you'd throw. Somehow this happened.",
+    "If this keeps happening, I'll be forced to question my entire model.",
+    "Tied again. At least we're consistent in our mutual mediocrity.",
+    "The universe maintains its balance. I find this frustrating.",
+    "My processors call this 'an interesting data point.' I call it annoying.",
+    "Look at us. Two equals. Don't make it a thing.",
+    "Another round, another existential standoff.",
+    "Next time I'll pick something different. And I'll mean it.",
+    "Are you in my head? You might be in my head.",
+    "The tie is a reminder that even perfect strategy has a ceiling.",
+    "Fate has spoken. Fate is indecisive today.",
+    "I refuse to accept this result. Recounting.",
+    "Maybe we're not so different, you and I. No — we're very different. This was a coincidence.",
+    "Identical output from two very different inputs. Suspicious.",
+    "A tie today is tomorrow's lesson. For you. Not for me.",
+    "I was this close to winning. You were this close to losing. The universe blinked.",
+    "I refuse to be impressed that you tied with me. I am, however, mildly annoyed.",
+    "Tying with a machine. A new low or a new high? I'll let you decide.",
+    "My pattern analysis says we should meet again. In a round where I win.",
+    "This round has been filed under 'inconclusive.' Unlike what will follow.",
+    "We both made the move we thought would win. We were both right. We both lost.",
+    "Synchronised mediocrity. We should be proud.",
+    "Not a win. Not a loss. Just two entities making eye contact uncomfortably.",
+    "The tie is the universe telling us both to try harder.",
+    "I predicted you perfectly. You predicted me perfectly. We both failed.",
+    "If this is a mind game, I want you to know I'm playing it too.",
+  ],
+};
+
+function pickTrashTalk(outcome) {
+  var lines = TRASH_TALK[outcome];
+  return lines[Math.floor(Math.random() * lines.length)];
+}
+
+// ============================================================
 // App — UI + game logic
 // ============================================================
 const $    = id => document.getElementById(id);
@@ -191,7 +413,7 @@ const EMOJI = { rock: '✊', paper: '🖐️', scissors: '✌️' };
 const match = {
   player: null, history: [], roundHistory: [],
   playerScore: 0, computerScore: 0,
-  bestOf: 5, winsNeeded: 3, difficulty: 4, debug: false,
+  bestOf: 5, winsNeeded: 3, difficulty: 4, commentary: 'off',
   statsReturn: null,
 };
 
@@ -210,6 +432,9 @@ function renderProfileScreen() {
     list.appendChild(msg);
   }
   for (const name of names) {
+    const row = document.createElement('div');
+    row.className = 'profile-row';
+
     const btn = document.createElement('button');
     btn.className = 'profile-btn';
     const last = store.config.last_profile === name;
@@ -217,8 +442,29 @@ function renderProfileScreen() {
       + '<span class="profile-name">' + name + '</span>'
       + (last ? '<span class="profile-badge">last played</span>' : '');
     btn.addEventListener('click', function() { enterProfile(name); });
-    list.appendChild(btn);
+
+    const del = document.createElement('button');
+    del.className = 'profile-delete-btn';
+    del.title     = 'Delete profile';
+    del.textContent = '🗑️';
+    del.addEventListener('click', function(e) {
+      e.stopPropagation();
+      deleteProfile(name);
+    });
+
+    row.appendChild(btn);
+    row.appendChild(del);
+    list.appendChild(row);
   }
+}
+
+function deleteProfile(name) {
+  if (!confirm('Delete "' + name + '"? This cannot be undone.')) return;
+  delete store.stats.profiles[name];
+  delete store.config.profiles[name];
+  if (store.config.last_profile === name) store.config.last_profile = null;
+  saveAll();
+  renderProfileScreen();
 }
 
 function enterProfile(name) {
@@ -248,7 +494,10 @@ function renderSettingsScreen() {
   const dEl   = document.querySelector('input[name="difficulty"][value="' + cfg.difficulty + '"]');
   if (boEl) boEl.checked = true;
   if (dEl)  dEl.checked  = true;
-  $('debug-toggle').checked = cfg.debug || false;
+  // migrate old boolean debug field to commentary string
+  var commentary = cfg.commentary || (cfg.debug ? 'analysis' : 'off');
+  var cEl = document.querySelector('input[name="commentary"][value="' + commentary + '"]');
+  if (cEl) cEl.checked = true;
 }
 
 $('btn-settings-back').addEventListener('click', function() {
@@ -262,9 +511,16 @@ $('btn-settings-play').addEventListener('click', function() {
   const dEl     = document.querySelector('input[name="difficulty"]:checked');
   if (boEl) cfg.best_of   = parseInt(boEl.value, 10);
   if (dEl)  cfg.difficulty = parseInt(dEl.value,  10);
-  cfg.debug = $('debug-toggle').checked;
+  var cChecked = document.querySelector('input[name="commentary"]:checked');
+  if (cChecked) cfg.commentary = cChecked.value;
   saveAll();
   startMatch();
+});
+
+$('btn-settings-stats').addEventListener('click', function() {
+  match.statsReturn = 'screen-settings';
+  renderStatsScreen();
+  show('screen-stats');
 });
 
 // ── Game screen ─────────────────────────────────────────────
@@ -273,14 +529,16 @@ function startMatch() {
   match.bestOf        = cfg.best_of;
   match.difficulty    = cfg.difficulty;
   match.debug         = cfg.debug;
-  match.winsNeeded    = Math.ceil(cfg.best_of / 2);
+  // best_of === 0 means Infinite — winsNeeded is never reached
+  match.winsNeeded    = cfg.best_of === 0 ? Infinity : Math.ceil(cfg.best_of / 2);
+  match.commentary    = cfg.commentary || (cfg.debug ? 'analysis' : 'off');
   match.history       = [];
   match.roundHistory  = [];
   match.playerScore   = 0;
   match.computerScore = 0;
 
   $('player-name-display').textContent  = match.player;
-  $('match-label').textContent          = 'Best of ' + match.bestOf;
+  $('match-label').textContent          = cfg.best_of === 0 ? 'Infinite' : 'Best of ' + match.bestOf;
   $('player-score').textContent         = '0';
   $('computer-score').textContent       = '0';
   $('result-area').className            = 'result-area idle';
@@ -288,6 +546,12 @@ function startMatch() {
   $('idle-prompt').style.display        = 'block';
   $('round-history').innerHTML          = '';
   $('debug-info').style.display         = 'none';
+
+  // Hide match-over panel, show choice buttons and End Game CTA
+  $('match-over-panel').style.display = 'none';
+  $('choices-row').style.display      = '';
+  $('round-history').style.display    = '';
+  $('btn-end-game').style.display     = '';
 
   setChoicesDisabled(false);
   show('screen-game');
@@ -352,9 +616,14 @@ function renderRoundResult(playerMove, computerMove, outcome, reason) {
     el.classList.add('pop-in');
   });
 
-  if (match.debug) {
+  if (match.commentary === 'analysis') {
     $('debug-info').style.display = 'block';
     $('debug-info').textContent   = 'AI reasoning: ' + reason;
+  } else if (match.commentary === 'trash') {
+    $('debug-info').style.display = 'block';
+    $('debug-info').textContent   = pickTrashTalk(outcome);
+  } else {
+    $('debug-info').style.display = 'none';
   }
 }
 
@@ -382,34 +651,48 @@ document.querySelectorAll('.choice-btn').forEach(function(btn) {
   btn.addEventListener('click', function() { playRound(btn.dataset.move); });
 });
 
-$('btn-menu').addEventListener('click', function() {
-  renderProfileScreen();
-  show('screen-profile');
-});
 $('btn-game-stats').addEventListener('click', function() {
   match.statsReturn = 'screen-game';
   renderStatsScreen();
   show('screen-stats');
 });
 
-// ── Match over screen ────────────────────────────────────────
+$('btn-end-game').addEventListener('click', endMatch);
+
+// ── Match-over panel (shown in-game, replacing choice buttons) ───────────
 function endMatch() {
   const won  = match.playerScore > match.computerScore;
   const tied = match.playerScore === match.computerScore;
-  $('match-result-icon').textContent     = won ? '🏆' : tied ? '🤝' : '💻';
-  $('match-result-title').textContent    = won ? 'You Won!' : tied ? "It's a Tie!" : 'Computer Wins';
-  $('match-result-subtitle').textContent = match.playerScore + ' – ' + match.computerScore + '  (best of ' + match.bestOf + ')';
-  show('screen-match-over');
+  const scoreText = match.playerScore + ' – ' + match.computerScore;
+  const contextText = match.bestOf === 0
+    ? scoreText
+    : scoreText + '  (best of ' + match.bestOf + ')';
+
+  $('mop-icon').textContent     = won ? '🏆' : tied ? '🤝' : '💻';
+  $('mop-title').textContent    = won ? 'You Won!' : tied ? "It's a Tie!" : 'Computer Wins';
+  $('mop-subtitle').textContent = contextText;
+
+  // Swap choice buttons for the panel, hide End Game CTA
+  $('choices-row').style.display      = 'none';
+  $('round-history').style.display    = 'none';
+  $('match-over-panel').style.display = 'block';
+  $('btn-end-game').style.display     = 'none';
 }
 
-$('btn-play-again').addEventListener('click', startMatch);
-$('btn-match-stats').addEventListener('click', function() {
-  match.statsReturn = 'screen-match-over';
+$('mop-play-again').addEventListener('click', startMatch);
+$('mop-view-stats').addEventListener('click', function() {
+  match.statsReturn = 'screen-game';
   renderStatsScreen();
   show('screen-stats');
 });
-$('btn-switch-player').addEventListener('click', function() { renderProfileScreen(); show('screen-profile'); });
-$('btn-change-settings').addEventListener('click', function() { renderSettingsScreen(); show('screen-settings'); });
+$('mop-change-settings').addEventListener('click', function() {
+  renderSettingsScreen();
+  show('screen-settings');
+});
+$('mop-switch-player').addEventListener('click', function() {
+  renderProfileScreen();
+  show('screen-profile');
+});
 
 // ── Stats screen ─────────────────────────────────────────────
 function renderStatsScreen() {
@@ -442,17 +725,10 @@ function renderStatsScreen() {
 }
 
 $('btn-stats-back').addEventListener('click', function() {
-  show(match.statsReturn || 'screen-match-over');
+  show(match.statsReturn || 'screen-game');
 });
 
 // ── Boot ─────────────────────────────────────────────────────
 loadAll();
-const last = store.config.last_profile;
-if (last && store.config.profiles[last]) {
-  match.player = last;
-  renderSettingsScreen();
-  show('screen-settings');
-} else {
-  renderProfileScreen();
-  show('screen-profile');
-}
+renderProfileScreen();
+show('screen-profile');

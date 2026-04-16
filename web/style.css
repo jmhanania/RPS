@@ -25,7 +25,6 @@ body {
   color: var(--text);
   min-height: 100dvh;
   display: flex;
-  align-items: center;
   justify-content: center;
 }
 
@@ -35,10 +34,10 @@ body {
   width: 100%;
   max-width: 460px;
   min-height: 100dvh;
-  padding: 24px 16px 32px;
+  padding: 48px 16px 48px;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   gap: 0;
 }
 .screen.active { display: flex; }
@@ -112,6 +111,22 @@ h3 { font-size: 0.8rem; font-weight: 600; color: var(--muted); text-transform: u
 
 .profile-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 4px; }
 
+.profile-row { display: flex; align-items: center; gap: 6px; }
+.profile-row .profile-btn { flex: 1; }
+.profile-delete-btn {
+  flex-shrink: 0;
+  background: none;
+  border: 1px solid transparent;
+  border-radius: var(--r-sm);
+  color: var(--loss);
+  font-size: 1rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 10px 11px;
+  transition: border-color .15s, background .15s;
+}
+.profile-delete-btn:hover { border-color: var(--loss); background: rgba(239,68,68,.1); }
+
 .profile-btn {
   display: flex;
   align-items: center;
@@ -139,22 +154,19 @@ h3 { font-size: 0.8rem; font-weight: 600; color: var(--muted); text-transform: u
 .empty-msg { color: var(--muted); font-size: 0.88rem; text-align: center; padding: 8px 0; }
 
 .divider {
-  position: relative;
-  text-align: center;
+  display: flex;
+  align-items: center;
+  gap: 12px;
   color: var(--muted);
   font-size: 0.8rem;
   margin: 18px 0;
 }
 .divider::before, .divider::after {
   content: '';
-  position: absolute;
-  top: 50%;
-  width: 44%;
+  flex: 1;
   height: 1px;
   background: var(--border);
 }
-.divider::before { left: 0; }
-.divider::after  { right: 0; }
 
 .input-row { display: flex; gap: 8px; }
 input[type="text"] {
@@ -208,7 +220,7 @@ input[type="text"] + .btn-primary { width: auto; white-space: nowrap; }
 input[type="checkbox"] { accent-color: var(--accent); width: 15px; height: 15px; cursor: pointer; }
 
 /* ── Game screen ──────────────────────────────────────────────────────────── */
-#screen-game { justify-content: flex-start; padding-top: 16px; gap: 0; }
+#screen-game { gap: 0; }
 
 .game-header {
   display: flex;
@@ -383,13 +395,17 @@ input[type="checkbox"] { accent-color: var(--accent); width: 15px; height: 15px;
 .round-pip.loss { background: rgba(239,68,68,.2);   color: var(--loss); border: 1px solid var(--loss); }
 .round-pip.tie  { background: rgba(245,158,11,.18); color: var(--tie);  border: 1px solid var(--tie);  }
 
-/* ── Match over screen ────────────────────────────────────────────────────── */
-.match-over-icon    { font-size: 4.5rem; text-align: center; margin-bottom: 8px; }
-#match-result-title { text-align: center; font-size: 2rem; }
-#match-result-subtitle { text-align: center; color: var(--muted); margin-top: 4px; font-size: 0.9rem; }
+/* ── End Game button ──────────────────────────────────────────────────────── */
+.end-game-btn { color: var(--loss); font-size: 0.8rem; font-weight: 600; }
+.end-game-btn:hover { color: #fca5a5; }
+
+/* ── Match-over panel (in-game) ───────────────────────────────────────────── */
+.mop-card    { margin-top: 8px; }
+.mop-subtitle { text-align: center; color: var(--muted); margin-top: 4px; font-size: 0.9rem; }
+.match-over-icon { font-size: 4.5rem; text-align: center; margin-bottom: 8px; }
 
 /* ── Stats screen ─────────────────────────────────────────────────────────── */
-#screen-stats { justify-content: flex-start; padding-top: 24px; }
+#screen-stats { }
 .stats-card { max-height: 92dvh; overflow-y: auto; }
 
 .stats-section { margin-bottom: 24px; }
