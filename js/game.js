@@ -693,6 +693,12 @@ $('btn-settings-stats').addEventListener('click', function() {
   show('screen-stats');
 });
 
+$('btn-settings-leaderboard').addEventListener('click', function() {
+  match.lbReturn = 'screen-settings';
+  renderLeaderboardScreen();
+  show('screen-leaderboard');
+});
+
 // ── Game screen ─────────────────────────────────────────────
 function startMatch() {
   const cfg = activeConfig();
@@ -870,6 +876,11 @@ $('mop-view-stats').addEventListener('click', function() {
   match.statsReturn = 'screen-game';
   renderStatsScreen();
   show('screen-stats');
+});
+$('mop-leaderboard').addEventListener('click', function() {
+  match.lbReturn = 'screen-game';
+  renderLeaderboardScreen();
+  show('screen-leaderboard');
 });
 $('mop-change-settings').addEventListener('click', function() {
   renderSettingsScreen();
