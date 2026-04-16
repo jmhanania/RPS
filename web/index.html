@@ -39,6 +39,7 @@
           <label class="radio-pill"><input type="radio" name="best_of" value="5"> Best of 5</label>
           <label class="radio-pill"><input type="radio" name="best_of" value="7"> Best of 7</label>
           <label class="radio-pill"><input type="radio" name="best_of" value="9"> Best of 9</label>
+          <label class="radio-pill"><input type="radio" name="best_of" value="0"> Infinite</label>
         </div>
       </div>
 
@@ -59,6 +60,8 @@
         </label>
       </div>
 
+      <button id="btn-settings-stats" class="btn-secondary" style="width:100%;margin-bottom:10px;">View My Stats</button>
+
       <div class="btn-row">
         <button id="btn-settings-back" class="btn-secondary">← Back</button>
         <button id="btn-settings-play" class="btn-primary">Play →</button>
@@ -70,9 +73,9 @@
   <div id="screen-game" class="screen">
 
     <header class="game-header">
-      <button id="btn-menu"       class="btn-ghost" title="Switch profile">☰</button>
-      <span   id="match-label"    class="match-label"></span>
       <button id="btn-game-stats" class="btn-ghost" title="Stats">📊</button>
+      <span   id="match-label"    class="match-label"></span>
+      <button id="btn-end-game"   class="btn-ghost end-game-btn" title="End Game">End Game</button>
     </header>
 
     <!-- Scoreboard -->
@@ -106,7 +109,7 @@
     </div>
 
     <!-- Choice buttons -->
-    <div class="choices-row">
+    <div id="choices-row" class="choices-row">
       <button class="choice-btn" data-move="rock">✊<span>Rock</span></button>
       <button class="choice-btn" data-move="paper">🖐️<span>Paper</span></button>
       <button class="choice-btn" data-move="scissors">✌️<span>Scissors</span></button>
@@ -115,21 +118,21 @@
     <!-- Round pip history -->
     <div id="round-history" class="round-history"></div>
 
-  </div>
-
-  <!-- ── Match over ─────────────────────────────────────────────────────── -->
-  <div id="screen-match-over" class="screen">
-    <div class="card">
-      <div id="match-result-icon"     class="match-over-icon"></div>
-      <h2  id="match-result-title"></h2>
-      <p   id="match-result-subtitle"></p>
-      <div class="btn-col">
-        <button id="btn-play-again"      class="btn-primary">Play Again</button>
-        <button id="btn-match-stats"     class="btn-secondary">View Stats</button>
-        <button id="btn-change-settings" class="btn-secondary">Change Settings</button>
-        <button id="btn-switch-player"   class="btn-secondary">Switch Player</button>
+    <!-- Match-over panel (replaces choice buttons when match ends) -->
+    <div id="match-over-panel" style="display:none; width:100%">
+      <div class="card mop-card">
+        <div id="mop-icon"     class="match-over-icon"></div>
+        <h2  id="mop-title"   style="text-align:center"></h2>
+        <p   id="mop-subtitle" class="mop-subtitle"></p>
+        <div class="btn-col">
+          <button id="mop-play-again"      class="btn-primary">Play Again</button>
+          <button id="mop-view-stats"      class="btn-secondary">View Stats</button>
+          <button id="mop-change-settings" class="btn-secondary">Change Settings</button>
+          <button id="mop-switch-player"   class="btn-secondary">Switch Player</button>
+        </div>
       </div>
     </div>
+
   </div>
 
   <!-- ── Stats ─────────────────────────────────────────────────────────── -->

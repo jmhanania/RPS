@@ -383,10 +383,14 @@ input[type="checkbox"] { accent-color: var(--accent); width: 15px; height: 15px;
 .round-pip.loss { background: rgba(239,68,68,.2);   color: var(--loss); border: 1px solid var(--loss); }
 .round-pip.tie  { background: rgba(245,158,11,.18); color: var(--tie);  border: 1px solid var(--tie);  }
 
-/* ── Match over screen ────────────────────────────────────────────────────── */
-.match-over-icon    { font-size: 4.5rem; text-align: center; margin-bottom: 8px; }
-#match-result-title { text-align: center; font-size: 2rem; }
-#match-result-subtitle { text-align: center; color: var(--muted); margin-top: 4px; font-size: 0.9rem; }
+/* ── End Game button ──────────────────────────────────────────────────────── */
+.end-game-btn { color: var(--loss); font-size: 0.8rem; font-weight: 600; }
+.end-game-btn:hover { color: #fca5a5; }
+
+/* ── Match-over panel (in-game) ───────────────────────────────────────────── */
+.mop-card    { margin-top: 8px; }
+.mop-subtitle { text-align: center; color: var(--muted); margin-top: 4px; font-size: 0.9rem; }
+.match-over-icon { font-size: 4.5rem; text-align: center; margin-bottom: 8px; }
 
 /* ── Stats screen ─────────────────────────────────────────────────────────── */
 #screen-stats { justify-content: flex-start; padding-top: 24px; }

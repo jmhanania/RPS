@@ -267,20 +267,27 @@ $('btn-settings-play').addEventListener('click', function() {
   startMatch();
 });
 
+$('btn-settings-stats').addEventListener('click', function() {
+  match.statsReturn = 'screen-settings';
+  renderStatsScreen();
+  show('screen-stats');
+});
+
 // ── Game screen ─────────────────────────────────────────────
 function startMatch() {
   const cfg = activeConfig();
   match.bestOf        = cfg.best_of;
   match.difficulty    = cfg.difficulty;
   match.debug         = cfg.debug;
-  match.winsNeeded    = Math.ceil(cfg.best_of / 2);
+  // best_of === 0 means Infinite — winsNeeded is never reached
+  match.winsNeeded    = cfg.best_of === 0 ? Infinity : Math.ceil(cfg.best_of / 2);
   match.history       = [];
   match.roundHistory  = [];
   match.playerScore   = 0;
   match.computerScore = 0;
 
   $('player-name-display').textContent  = match.player;
-  $('match-label').textContent          = 'Best of ' + match.bestOf;
+  $('match-label').textContent          = cfg.best_of === 0 ? 'Infinite' : 'Best of ' + match.bestOf;
   $('player-score').textContent         = '0';
   $('computer-score').textContent       = '0';
   $('result-area').className            = 'result-area idle';
@@ -288,6 +295,11 @@ function startMatch() {
   $('idle-prompt').style.display        = 'block';
   $('round-history').innerHTML          = '';
   $('debug-info').style.display         = 'none';
+
+  // Hide match-over panel, show choice buttons
+  $('match-over-panel').style.display = 'none';
+  $('choices-row').style.display      = '';
+  $('round-history').style.display    = '';
 
   setChoicesDisabled(false);
   show('screen-game');
@@ -382,34 +394,47 @@ document.querySelectorAll('.choice-btn').forEach(function(btn) {
   btn.addEventListener('click', function() { playRound(btn.dataset.move); });
 });
 
-$('btn-menu').addEventListener('click', function() {
-  renderProfileScreen();
-  show('screen-profile');
-});
 $('btn-game-stats').addEventListener('click', function() {
   match.statsReturn = 'screen-game';
   renderStatsScreen();
   show('screen-stats');
 });
 
-// ── Match over screen ────────────────────────────────────────
+$('btn-end-game').addEventListener('click', endMatch);
+
+// ── Match-over panel (shown in-game, replacing choice buttons) ───────────
 function endMatch() {
   const won  = match.playerScore > match.computerScore;
   const tied = match.playerScore === match.computerScore;
-  $('match-result-icon').textContent     = won ? '🏆' : tied ? '🤝' : '💻';
-  $('match-result-title').textContent    = won ? 'You Won!' : tied ? "It's a Tie!" : 'Computer Wins';
-  $('match-result-subtitle').textContent = match.playerScore + ' – ' + match.computerScore + '  (best of ' + match.bestOf + ')';
-  show('screen-match-over');
+  const scoreText = match.playerScore + ' – ' + match.computerScore;
+  const contextText = match.bestOf === 0
+    ? scoreText
+    : scoreText + '  (best of ' + match.bestOf + ')';
+
+  $('mop-icon').textContent     = won ? '🏆' : tied ? '🤝' : '💻';
+  $('mop-title').textContent    = won ? 'You Won!' : tied ? "It's a Tie!" : 'Computer Wins';
+  $('mop-subtitle').textContent = contextText;
+
+  // Swap choice buttons for the panel
+  $('choices-row').style.display      = 'none';
+  $('round-history').style.display    = 'none';
+  $('match-over-panel').style.display = 'block';
 }
 
-$('btn-play-again').addEventListener('click', startMatch);
-$('btn-match-stats').addEventListener('click', function() {
-  match.statsReturn = 'screen-match-over';
+$('mop-play-again').addEventListener('click', startMatch);
+$('mop-view-stats').addEventListener('click', function() {
+  match.statsReturn = 'screen-game';
   renderStatsScreen();
   show('screen-stats');
 });
-$('btn-switch-player').addEventListener('click', function() { renderProfileScreen(); show('screen-profile'); });
-$('btn-change-settings').addEventListener('click', function() { renderSettingsScreen(); show('screen-settings'); });
+$('mop-change-settings').addEventListener('click', function() {
+  renderSettingsScreen();
+  show('screen-settings');
+});
+$('mop-switch-player').addEventListener('click', function() {
+  renderProfileScreen();
+  show('screen-profile');
+});
 
 // ── Stats screen ─────────────────────────────────────────────
 function renderStatsScreen() {
@@ -442,17 +467,10 @@ function renderStatsScreen() {
 }
 
 $('btn-stats-back').addEventListener('click', function() {
-  show(match.statsReturn || 'screen-match-over');
+  show(match.statsReturn || 'screen-game');
 });
 
 // ── Boot ─────────────────────────────────────────────────────
 loadAll();
-const last = store.config.last_profile;
-if (last && store.config.profiles[last]) {
-  match.player = last;
-  renderSettingsScreen();
-  show('screen-settings');
-} else {
-  renderProfileScreen();
-  show('screen-profile');
-}
+renderProfileScreen();
+show('screen-profile');
