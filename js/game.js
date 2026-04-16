@@ -42,21 +42,55 @@ const firebaseConfig = {
   appId:             '1:16431183437:web:97dc6e5ff5dc25ff1a8e04',
 };
 
-const LB_DIFF_NAMES = { 1: '1 – Random', 2: '2 – Adaptive', 3: '3 – Tricky', 4: '4 – Markov' };
+const LB_DIFF_NAMES = { 0: 'Total', 1: '1 – Random', 2: '2 – Adaptive', 3: '3 – Tricky', 4: '4 – Markov' };
+const LB_COLS = [
+  { key: 'wins',     label: 'W'   },
+  { key: 'losses',   label: 'L'   },
+  { key: 'ties',     label: 'T'   },
+  { key: 'pct',      label: 'PCT' },
+  { key: 'rock',     label: '✊'  },
+  { key: 'paper',    label: '🖐️' },
+  { key: 'scissors', label: '✌️' },
+];
+
 let db = null;
-let currentLbDiff = 4;
+let currentLbDiff = 0;
+let currentLbSort = { field: 'wins', dir: 'desc' };
 
 try {
   firebase.initializeApp(firebaseConfig);
   db = firebase.firestore();
 } catch (_) {}
 
+function formatPct(wins, played) {
+  if (played === 0) return '—';
+  const v = wins / played;
+  return v >= 1 ? '1.000' : '.' + v.toFixed(3).slice(2);
+}
+
+function lbSortValue(d, field) {
+  const played = (d.wins || 0) + (d.losses || 0) + (d.ties || 0);
+  const moves  = (d.rock || 0) + (d.paper || 0) + (d.scissors || 0);
+  if (field === 'wins')     return d.wins || 0;
+  if (field === 'losses')   return d.losses || 0;
+  if (field === 'ties')     return d.ties || 0;
+  if (field === 'pct')      return played > 0 ? d.wins / played : -1;
+  if (field === 'rock')     return moves  > 0 ? (d.rock     || 0) / moves : -1;
+  if (field === 'paper')    return moves  > 0 ? (d.paper    || 0) / moves : -1;
+  if (field === 'scissors') return moves  > 0 ? (d.scissors || 0) / moves : -1;
+  return 0;
+}
+
 function syncToLeaderboard(playerName, stats) {
   if (!db) return;
   const totals = stats.totals || { rock: 0, paper: 0, scissors: 0 };
   const bd = stats.by_difficulty || {};
+  let totalWins = 0, totalLosses = 0, totalTies = 0;
   for (var d = 1; d <= 4; d++) {
     const r = bd[d] || { wins: 0, losses: 0, ties: 0 };
+    totalWins   += r.wins;
+    totalLosses += r.losses;
+    totalTies   += r.ties;
     if (r.wins + r.losses + r.ties === 0) continue;
     db.collection('leaderboard_' + d).doc(playerName).set({
       name:      playerName,
@@ -69,53 +103,99 @@ function syncToLeaderboard(playerName, stats) {
       updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
     }).catch(function() {});
   }
+  if (totalWins + totalLosses + totalTies > 0) {
+    db.collection('leaderboard_0').doc(playerName).set({
+      name:      playerName,
+      wins:      totalWins,
+      losses:    totalLosses,
+      ties:      totalTies,
+      rock:      totals.rock     || 0,
+      paper:     totals.paper    || 0,
+      scissors:  totals.scissors || 0,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+    }).catch(function() {});
+  }
 }
 
 function renderLeaderboardScreen() {
-  // Render difficulty tabs
-  $('lb-tabs').innerHTML = [1, 2, 3, 4].map(function(d) {
+  $('lb-tabs').innerHTML = [0, 1, 2, 3, 4].map(function(d) {
     return '<button class="lb-tab' + (d === currentLbDiff ? ' active' : '') + '" data-diff="' + d + '">'
       + LB_DIFF_NAMES[d] + '</button>';
   }).join('');
   $('lb-tabs').querySelectorAll('.lb-tab').forEach(function(btn) {
     btn.addEventListener('click', function() {
       currentLbDiff = parseInt(btn.dataset.diff, 10);
-      renderLeaderboardScreen();
+      $('lb-tabs').querySelectorAll('.lb-tab').forEach(function(b) {
+        b.classList.toggle('active', parseInt(b.dataset.diff, 10) === currentLbDiff);
+      });
+      fetchAndRenderLeaderboard();
+    });
+  });
+  fetchAndRenderLeaderboard();
+}
+
+function fetchAndRenderLeaderboard() {
+  const N = LB_COLS.length + 2;
+  const thead = $('lb-head');
+  const tbody = $('lb-body');
+
+  thead.innerHTML = '<tr><th class="lb-rank-h">#</th><th class="lb-name-h">Player</th>'
+    + LB_COLS.map(function(c) {
+        const active = c.key === currentLbSort.field;
+        const arrow  = active ? (currentLbSort.dir === 'desc' ? ' ↓' : ' ↑') : '';
+        return '<th class="lb-sort-th' + (active ? ' lb-sort-active' : '') + '" data-sort="' + c.key + '">'
+          + c.label + arrow + '</th>';
+      }).join('')
+    + '</tr>';
+  thead.querySelectorAll('.lb-sort-th').forEach(function(th) {
+    th.addEventListener('click', function() {
+      const f = th.dataset.sort;
+      currentLbSort = { field: f, dir: currentLbSort.field === f && currentLbSort.dir === 'desc' ? 'asc' : 'desc' };
+      fetchAndRenderLeaderboard();
     });
   });
 
-  const tbody = $('lb-body');
-  tbody.innerHTML = '<tr><td colspan="5" class="lb-loading">Loading…</td></tr>';
+  tbody.innerHTML = '<tr><td colspan="' + N + '" class="lb-loading">Loading…</td></tr>';
   if (!db) {
-    tbody.innerHTML = '<tr><td colspan="5" class="lb-loading" style="color:var(--loss)">Leaderboard unavailable.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="' + N + '" class="lb-loading" style="color:var(--loss)">Leaderboard unavailable.</td></tr>';
     return;
   }
-  db.collection('leaderboard_' + currentLbDiff).orderBy('wins', 'desc').limit(20).get()
+  db.collection('leaderboard_' + currentLbDiff).orderBy('wins', 'desc').limit(100).get()
     .then(function(snap) {
       if (snap.empty) {
-        tbody.innerHTML = '<tr><td colspan="5" class="lb-loading">No entries yet for this difficulty — play a match!</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="' + N + '" class="lb-loading">No entries yet — play a match to appear here!</td></tr>';
         return;
       }
-      tbody.innerHTML = snap.docs.map(function(doc, i) {
-        const d      = doc.data();
+      const rows = snap.docs.map(function(doc) { return doc.data(); });
+      rows.sort(function(a, b) {
+        const av = lbSortValue(a, currentLbSort.field);
+        const bv = lbSortValue(b, currentLbSort.field);
+        return currentLbSort.dir === 'desc' ? bv - av : av - bv;
+      });
+      tbody.innerHTML = rows.slice(0, 20).map(function(d, i) {
         const played = (d.wins || 0) + (d.losses || 0) + (d.ties || 0);
-        const winPct = played > 0 ? Math.round(d.wins / played * 100) + '%' : '—';
         const moves  = (d.rock || 0) + (d.paper || 0) + (d.scissors || 0);
-        const mp     = function(n) { return moves > 0 ? Math.round((n || 0) / moves * 100) + '%' : '—'; };
-        const medal  = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : '#' + (i + 1);
+        const mp = function(n) {
+          if (moves === 0) return '—';
+          const v = (n || 0) / moves;
+          return v >= 1 ? '1.000' : '.' + v.toFixed(3).slice(2);
+        };
+        const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : (i + 1);
         return '<tr>'
-          + '<td class="lb-rank">' + medal + '</td>'
-          + '<td class="lb-name">' + (d.name || doc.id) + '</td>'
-          + '<td><span style="color:var(--win)">'  + (d.wins   || 0) + '</span>'
-          + ' / <span style="color:var(--loss)">'  + (d.losses || 0) + '</span>'
-          + ' / <span style="color:var(--tie)">'   + (d.ties   || 0) + '</span></td>'
-          + '<td>' + winPct + '</td>'
-          + '<td class="lb-moves">✊&nbsp;' + mp(d.rock) + '&ensp;🖐️&nbsp;' + mp(d.paper) + '&ensp;✌️&nbsp;' + mp(d.scissors) + '</td>'
+          + '<td class="lb-rank">'  + medal + '</td>'
+          + '<td class="lb-name">'  + (d.name || '?') + '</td>'
+          + '<td style="color:var(--win)">'  + (d.wins   || 0) + '</td>'
+          + '<td style="color:var(--loss)">' + (d.losses || 0) + '</td>'
+          + '<td style="color:var(--tie)">'  + (d.ties   || 0) + '</td>'
+          + '<td>' + formatPct(d.wins || 0, played) + '</td>'
+          + '<td class="lb-move-col">' + mp(d.rock)     + '</td>'
+          + '<td class="lb-move-col">' + mp(d.paper)    + '</td>'
+          + '<td class="lb-move-col">' + mp(d.scissors) + '</td>'
           + '</tr>';
       }).join('');
     })
     .catch(function() {
-      tbody.innerHTML = '<tr><td colspan="5" class="lb-loading" style="color:var(--loss)">Failed to load — check your connection.</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="' + N + '" class="lb-loading" style="color:var(--loss)">Failed to load — check your connection.</td></tr>';
     });
 }
 

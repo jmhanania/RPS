@@ -461,10 +461,16 @@ input[type="checkbox"] { accent-color: var(--accent); width: 15px; height: 15px;
 }
 .lb-tab:hover  { color: var(--text); border-color: var(--accent-light); }
 .lb-tab.active { background: rgba(124,58,237,.2); border-color: var(--accent); color: var(--accent-light); }
-.lb-loading { text-align: center; color: var(--muted); padding: 24px; }
-.lb-rank    { font-size: 1rem; width: 40px; }
-.lb-name    { text-align: left !important; font-weight: 600; }
-.lb-moves   { font-size: 0.72rem; color: var(--muted); white-space: nowrap; }
+.lb-table    { font-size: 0.78rem; }
+.lb-loading  { text-align: center; color: var(--muted); padding: 24px; }
+.lb-rank-h   { width: 28px; }
+.lb-rank     { font-size: 0.9rem; }
+.lb-name-h   { text-align: left !important; min-width: 60px; }
+.lb-name     { text-align: left !important; font-weight: 600; }
+.lb-sort-th  { cursor: pointer; user-select: none; white-space: nowrap; }
+.lb-sort-th:hover   { color: var(--text); }
+.lb-sort-active     { color: var(--accent-light) !important; }
+.lb-move-col { color: var(--muted); font-size: 0.72rem; }
 
 /* ── Animations ───────────────────────────────────────────────────────────── */
 @keyframes pop-in {
