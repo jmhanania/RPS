@@ -42,7 +42,10 @@ const firebaseConfig = {
   appId:             '1:16431183437:web:97dc6e5ff5dc25ff1a8e04',
 };
 
+const LB_DIFF_NAMES = { 1: '1 – Random', 2: '2 – Adaptive', 3: '3 – Tricky', 4: '4 – Markov' };
 let db = null;
+let currentLbDiff = 4;
+
 try {
   firebase.initializeApp(firebaseConfig);
   db = firebase.firestore();
@@ -52,36 +55,45 @@ function syncToLeaderboard(playerName, stats) {
   if (!db) return;
   const totals = stats.totals || { rock: 0, paper: 0, scissors: 0 };
   const bd = stats.by_difficulty || {};
-  let wins = 0, losses = 0, ties = 0;
   for (var d = 1; d <= 4; d++) {
     const r = bd[d] || { wins: 0, losses: 0, ties: 0 };
-    wins   += r.wins;
-    losses += r.losses;
-    ties   += r.ties;
+    if (r.wins + r.losses + r.ties === 0) continue;
+    db.collection('leaderboard_' + d).doc(playerName).set({
+      name:      playerName,
+      wins:      r.wins,
+      losses:    r.losses,
+      ties:      r.ties,
+      rock:      totals.rock     || 0,
+      paper:     totals.paper    || 0,
+      scissors:  totals.scissors || 0,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+    }).catch(function() {});
   }
-  db.collection('leaderboard').doc(playerName).set({
-    name:      playerName,
-    wins:      wins,
-    losses:    losses,
-    ties:      ties,
-    rock:      totals.rock     || 0,
-    paper:     totals.paper    || 0,
-    scissors:  totals.scissors || 0,
-    updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
-  }).catch(function() {});
 }
 
 function renderLeaderboardScreen() {
+  // Render difficulty tabs
+  $('lb-tabs').innerHTML = [1, 2, 3, 4].map(function(d) {
+    return '<button class="lb-tab' + (d === currentLbDiff ? ' active' : '') + '" data-diff="' + d + '">'
+      + LB_DIFF_NAMES[d] + '</button>';
+  }).join('');
+  $('lb-tabs').querySelectorAll('.lb-tab').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      currentLbDiff = parseInt(btn.dataset.diff, 10);
+      renderLeaderboardScreen();
+    });
+  });
+
   const tbody = $('lb-body');
   tbody.innerHTML = '<tr><td colspan="5" class="lb-loading">Loading…</td></tr>';
   if (!db) {
     tbody.innerHTML = '<tr><td colspan="5" class="lb-loading" style="color:var(--loss)">Leaderboard unavailable.</td></tr>';
     return;
   }
-  db.collection('leaderboard').orderBy('wins', 'desc').limit(20).get()
+  db.collection('leaderboard_' + currentLbDiff).orderBy('wins', 'desc').limit(20).get()
     .then(function(snap) {
       if (snap.empty) {
-        tbody.innerHTML = '<tr><td colspan="5" class="lb-loading">No entries yet — play a match to appear here!</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="5" class="lb-loading">No entries yet for this difficulty — play a match!</td></tr>';
         return;
       }
       tbody.innerHTML = snap.docs.map(function(doc, i) {

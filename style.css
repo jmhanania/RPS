@@ -448,6 +448,19 @@ input[type="checkbox"] { accent-color: var(--accent); width: 15px; height: 15px;
 .stats-table tbody th { font-weight: 600; color: var(--muted); background: var(--surface2); text-align: left; }
 
 /* ── Leaderboard ──────────────────────────────────────────────────────────── */
+.lb-tabs  { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+.lb-tab {
+  padding: 6px 14px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 99px;
+  color: var(--muted);
+  font-size: 0.82rem;
+  cursor: pointer;
+  transition: all .15s;
+}
+.lb-tab:hover  { color: var(--text); border-color: var(--accent-light); }
+.lb-tab.active { background: rgba(124,58,237,.2); border-color: var(--accent); color: var(--accent-light); }
 .lb-loading { text-align: center; color: var(--muted); padding: 24px; }
 .lb-rank    { font-size: 1rem; width: 40px; }
 .lb-name    { text-align: left !important; font-weight: 600; }
