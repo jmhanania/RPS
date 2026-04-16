@@ -219,6 +219,19 @@ input[type="text"] + .btn-primary { width: auto; white-space: nowrap; }
 .toggle-row:hover { color: var(--text); }
 input[type="checkbox"] { accent-color: var(--accent); width: 15px; height: 15px; cursor: pointer; }
 
+/* ── In-game stats button ────────────────────────────────────────────────── */
+#btn-game-stats {
+  background: rgba(255,255,255,0.10);
+  border: 1px solid rgba(255,255,255,0.18);
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+#btn-game-stats:hover { background: rgba(255,255,255,0.20); color: var(--text); }
+
 /* ── Game screen ──────────────────────────────────────────────────────────── */
 #screen-game { gap: 0; }
 
@@ -433,6 +446,12 @@ input[type="checkbox"] { accent-color: var(--accent); width: 15px; height: 15px;
 }
 .stats-table thead th { color: var(--muted); font-weight: 500; background: var(--surface2); }
 .stats-table tbody th { font-weight: 600; color: var(--muted); background: var(--surface2); text-align: left; }
+
+/* ── Leaderboard ──────────────────────────────────────────────────────────── */
+.lb-loading { text-align: center; color: var(--muted); padding: 24px; }
+.lb-rank    { font-size: 1rem; width: 40px; }
+.lb-name    { text-align: left !important; font-weight: 600; }
+.lb-moves   { font-size: 0.72rem; color: var(--muted); white-space: nowrap; }
 
 /* ── Animations ───────────────────────────────────────────────────────────── */
 @keyframes pop-in {

@@ -20,9 +20,92 @@ const defaultStats = () => ({
     scissors: { rock: 0, paper: 0, scissors: 0 },
   },
   order2: {},
+  by_difficulty: {
+    1: { wins: 0, losses: 0, ties: 0 },
+    2: { wins: 0, losses: 0, ties: 0 },
+    3: { wins: 0, losses: 0, ties: 0 },
+    4: { wins: 0, losses: 0, ties: 0 },
+  },
 });
 
 const defaultConfig = () => ({ best_of: 5, difficulty: 4, commentary: 'off' });
+
+// ============================================================
+// Firebase / Leaderboard
+// ============================================================
+const firebaseConfig = {
+  apiKey:            'AIzaSyAFSvja93lI-LhE7_ADA1vRoWBuZZ49PPQ',
+  authDomain:        'rps-leaderboard-95043.firebaseapp.com',
+  projectId:         'rps-leaderboard-95043',
+  storageBucket:     'rps-leaderboard-95043.firebasestorage.app',
+  messagingSenderId: '16431183437',
+  appId:             '1:16431183437:web:97dc6e5ff5dc25ff1a8e04',
+};
+
+let db = null;
+try {
+  firebase.initializeApp(firebaseConfig);
+  db = firebase.firestore();
+} catch (_) {}
+
+function syncToLeaderboard(playerName, stats) {
+  if (!db) return;
+  const totals = stats.totals || { rock: 0, paper: 0, scissors: 0 };
+  const bd = stats.by_difficulty || {};
+  let wins = 0, losses = 0, ties = 0;
+  for (var d = 1; d <= 4; d++) {
+    const r = bd[d] || { wins: 0, losses: 0, ties: 0 };
+    wins   += r.wins;
+    losses += r.losses;
+    ties   += r.ties;
+  }
+  db.collection('leaderboard').doc(playerName).set({
+    name:      playerName,
+    wins:      wins,
+    losses:    losses,
+    ties:      ties,
+    rock:      totals.rock     || 0,
+    paper:     totals.paper    || 0,
+    scissors:  totals.scissors || 0,
+    updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+  }).catch(function() {});
+}
+
+function renderLeaderboardScreen() {
+  const tbody = $('lb-body');
+  tbody.innerHTML = '<tr><td colspan="5" class="lb-loading">Loading…</td></tr>';
+  if (!db) {
+    tbody.innerHTML = '<tr><td colspan="5" class="lb-loading" style="color:var(--loss)">Leaderboard unavailable.</td></tr>';
+    return;
+  }
+  db.collection('leaderboard').orderBy('wins', 'desc').limit(20).get()
+    .then(function(snap) {
+      if (snap.empty) {
+        tbody.innerHTML = '<tr><td colspan="5" class="lb-loading">No entries yet — play a match to appear here!</td></tr>';
+        return;
+      }
+      tbody.innerHTML = snap.docs.map(function(doc, i) {
+        const d      = doc.data();
+        const played = (d.wins || 0) + (d.losses || 0) + (d.ties || 0);
+        const winPct = played > 0 ? Math.round(d.wins / played * 100) + '%' : '—';
+        const moves  = (d.rock || 0) + (d.paper || 0) + (d.scissors || 0);
+        const mp     = function(n) { return moves > 0 ? Math.round((n || 0) / moves * 100) + '%' : '—'; };
+        const medal  = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : '#' + (i + 1);
+        return '<tr>'
+          + '<td class="lb-rank">' + medal + '</td>'
+          + '<td class="lb-name">' + (d.name || doc.id) + '</td>'
+          + '<td><span style="color:var(--win)">'  + (d.wins   || 0) + '</span>'
+          + ' / <span style="color:var(--loss)">'  + (d.losses || 0) + '</span>'
+          + ' / <span style="color:var(--tie)">'   + (d.ties   || 0) + '</span></td>'
+          + '<td>' + winPct + '</td>'
+          + '<td class="lb-moves">✊&nbsp;' + mp(d.rock) + '&ensp;🖐️&nbsp;' + mp(d.paper) + '&ensp;✌️&nbsp;' + mp(d.scissors) + '</td>'
+          + '</tr>';
+      }).join('');
+    })
+    .catch(function() {
+      tbody.innerHTML = '<tr><td colspan="5" class="lb-loading" style="color:var(--loss)">Failed to load — check your connection.</td></tr>';
+    });
+}
 
 // ============================================================
 // Persistence (localStorage)
@@ -414,7 +497,7 @@ const match = {
   player: null, history: [], roundHistory: [],
   playerScore: 0, computerScore: 0,
   bestOf: 5, winsNeeded: 3, difficulty: 4, commentary: 'off',
-  statsReturn: null,
+  statsReturn: null, lbReturn: null,
 };
 
 function activeStats()  { return store.stats.profiles[match.player];  }
@@ -425,12 +508,7 @@ function renderProfileScreen() {
   const list  = $('profile-list');
   list.innerHTML = '';
   const names = profileNames();
-  if (!names.length) {
-    const msg = document.createElement('p');
-    msg.className   = 'empty-msg';
-    msg.textContent = 'No profiles yet — create one below.';
-    list.appendChild(msg);
-  }
+  $('profile-divider').style.display = names.length ? '' : 'none';
   for (const name of names) {
     const row = document.createElement('div');
     row.className = 'profile-row';
@@ -672,6 +750,22 @@ function endMatch() {
   $('mop-title').textContent    = won ? 'You Won!' : tied ? "It's a Tie!" : 'Computer Wins';
   $('mop-subtitle').textContent = contextText;
 
+  // Record match result by difficulty (only if at least one round played)
+  if (match.roundHistory.length > 0) {
+    const stats = activeStats();
+    if (!stats.by_difficulty) {
+      stats.by_difficulty = { 1:{wins:0,losses:0,ties:0}, 2:{wins:0,losses:0,ties:0}, 3:{wins:0,losses:0,ties:0}, 4:{wins:0,losses:0,ties:0} };
+    }
+    const d = match.difficulty;
+    if (!stats.by_difficulty[d]) stats.by_difficulty[d] = { wins: 0, losses: 0, ties: 0 };
+    if (won) stats.by_difficulty[d].wins++;
+    else if (tied) stats.by_difficulty[d].ties++;
+    else stats.by_difficulty[d].losses++;
+    saveAll();
+  }
+
+  syncToLeaderboard(match.player, activeStats());
+
   // Swap choice buttons for the panel, hide End Game CTA
   $('choices-row').style.display      = 'none';
   $('round-history').style.display    = 'none';
@@ -711,6 +805,24 @@ function renderStatsScreen() {
       + '</div>';
   }).join('');
 
+  const diffNames = { 1: 'Random', 2: 'Adaptive', 3: 'Tricky', 4: 'Markov' };
+  const byDiff = stats.by_difficulty || {};
+  $('stats-diff').innerHTML =
+    '<thead><tr><th style="text-align:left">Difficulty</th><th>W</th><th>L</th><th>T</th><th>Win %</th></tr></thead><tbody>'
+    + [1, 2, 3, 4].map(function(d) {
+        const r = byDiff[d] || { wins: 0, losses: 0, ties: 0 };
+        const played = r.wins + r.losses + r.ties;
+        const pct = played > 0 ? Math.round(r.wins / played * 100) + '%' : '—';
+        return '<tr>'
+          + '<td style="text-align:left">' + d + ' – ' + diffNames[d] + '</td>'
+          + '<td style="color:var(--win)">'  + r.wins   + '</td>'
+          + '<td style="color:var(--loss)">' + r.losses + '</td>'
+          + '<td style="color:var(--tie)">'  + r.ties   + '</td>'
+          + '<td>' + pct + '</td>'
+          + '</tr>';
+      }).join('')
+    + '</tbody>';
+
   $('stats-order1').innerHTML =
     '<thead><tr><th>After ↓ / Next →</th>'
     + CHOICES.map(function(m) { return '<th>' + EMOJI[m] + ' ' + m + '</th>'; }).join('')
@@ -726,6 +838,17 @@ function renderStatsScreen() {
 
 $('btn-stats-back').addEventListener('click', function() {
   show(match.statsReturn || 'screen-game');
+});
+
+// ── Leaderboard screen ───────────────────────────────────────
+$('btn-profile-leaderboard').addEventListener('click', function() {
+  match.lbReturn = 'screen-profile';
+  renderLeaderboardScreen();
+  show('screen-leaderboard');
+});
+
+$('btn-lb-back').addEventListener('click', function() {
+  show(match.lbReturn || 'screen-profile');
 });
 
 // ── Boot ─────────────────────────────────────────────────────

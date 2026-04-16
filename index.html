@@ -17,12 +17,14 @@
 
       <div id="profile-list" class="profile-list"></div>
 
-      <div class="divider">or create new</div>
+      <div id="profile-divider" class="divider">or create new</div>
 
       <div class="input-row">
         <input type="text" id="new-profile-name" placeholder="Your name…" maxlength="24" autocomplete="off">
         <button id="btn-create-profile" class="btn-primary">Go</button>
       </div>
+
+      <button id="btn-profile-leaderboard" class="btn-secondary" style="width:100%;margin-top:12px;">🏆 Leaderboard</button>
     </div>
   </div>
 
@@ -149,6 +151,11 @@
       </div>
 
       <div class="stats-section">
+        <h3>Record vs. AI difficulty</h3>
+        <table id="stats-diff" class="stats-table"></table>
+      </div>
+
+      <div class="stats-section">
         <h3>What you throw after each move</h3>
         <table id="stats-order1" class="stats-table"></table>
       </div>
@@ -157,6 +164,35 @@
     </div>
   </div>
 
+  <!-- ── Leaderboard ──────────────────────────────────────────────────── -->
+  <div id="screen-leaderboard" class="screen">
+    <div class="card stats-card">
+      <h2>🏆 Leaderboard</h2>
+      <p class="sub">Top 20 players · updated after each match</p>
+
+      <table class="stats-table">
+        <thead>
+          <tr>
+            <th style="width:40px">#</th>
+            <th style="text-align:left">Player</th>
+            <th>W / L / T</th>
+            <th>Win%</th>
+            <th>Moves</th>
+          </tr>
+        </thead>
+        <tbody id="lb-body">
+          <tr><td colspan="5" class="lb-loading">Loading…</td></tr>
+        </tbody>
+      </table>
+
+      <div style="margin-top:22px">
+        <button id="btn-lb-back" class="btn-primary">← Back</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
   <script src="js/game.js"></script>
 </body>
 </html>
