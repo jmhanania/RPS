@@ -94,10 +94,9 @@ var currentUsername = null;   // Chosen RPS handle (accessible from game.js)
     var signedIn    = !!currentUser;
     var hasHandle   = signedIn && !!currentUsername;
 
-    // Profile screen — signed-in view vs sign-in button only
-    setDisplay('auth-profile-display',  hasHandle  ? ''     : 'none');
-    setDisplay('btn-profile-sign-in',   signedIn   ? 'none' : '');
-    setDisplay('btn-profile-sign-out',  signedIn   ? ''     : 'none');
+    // Profile screen — toggle signed-in / signed-out panels
+    setDisplay('auth-signed-in',  hasHandle ? ''     : 'none');
+    setDisplay('auth-signed-out', hasHandle ? 'none' : '');
     setText('auth-handle-display', currentUsername || '');
 
     // Settings screen

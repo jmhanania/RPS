@@ -599,44 +599,9 @@ function activeConfig() { return store.config.profiles[match.player]; }
 
 // ── Profile screen ──────────────────────────────────────────
 function renderProfileScreen() {
-  const list  = $('profile-list');
-  list.innerHTML = '';
-  const names = profileNames();
-  $('profile-divider').style.display = names.length ? '' : 'none';
-  for (const name of names) {
-    const row = document.createElement('div');
-    row.className = 'profile-row';
-
-    const btn = document.createElement('button');
-    btn.className = 'profile-btn';
-    const last = store.config.last_profile === name;
-    btn.innerHTML = '<span class="profile-icon">👤</span>'
-      + '<span class="profile-name">' + name + '</span>'
-      + (last ? '<span class="profile-badge">last played</span>' : '');
-    btn.addEventListener('click', function() { enterProfile(name); });
-
-    const del = document.createElement('button');
-    del.className = 'profile-delete-btn';
-    del.title     = 'Delete profile';
-    del.textContent = '🗑️';
-    del.addEventListener('click', function(e) {
-      e.stopPropagation();
-      deleteProfile(name);
-    });
-
-    row.appendChild(btn);
-    row.appendChild(del);
-    list.appendChild(row);
-  }
-}
-
-function deleteProfile(name) {
-  if (!confirm('Delete "' + name + '"? This cannot be undone.')) return;
-  delete store.stats.profiles[name];
-  delete store.config.profiles[name];
-  if (store.config.last_profile === name) store.config.last_profile = null;
-  saveAll();
-  renderProfileScreen();
+  // auth.js manages signed-in/signed-out display; just clear the guest input
+  var guestInput = $('guest-name');
+  if (guestInput) guestInput.value = '';
 }
 
 function enterProfile(name) {
@@ -648,14 +613,13 @@ function enterProfile(name) {
   show('screen-settings');
 }
 
-$('btn-create-profile').addEventListener('click', function() {
-  const name = $('new-profile-name').value.trim();
+$('btn-guest-play').addEventListener('click', function() {
+  const name = $('guest-name').value.trim();
   if (!name) return;
-  $('new-profile-name').value = '';
   enterProfile(name);
 });
-$('new-profile-name').addEventListener('keydown', function(e) {
-  if (e.key === 'Enter') $('btn-create-profile').click();
+$('guest-name').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') $('btn-guest-play').click();
 });
 
 // ── Settings screen ─────────────────────────────────────────
