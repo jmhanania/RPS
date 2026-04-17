@@ -629,6 +629,8 @@ function renderSettingsScreen() {
   var greetEl = $('settings-greeting');
   if (greetEl) greetEl.textContent = isSignedIn ? 'Welcome back,' : 'Welcome,';
   $('settings-profile-name').textContent = match.player;
+  var promptEl = $('settings-signin-prompt');
+  if (promptEl) promptEl.style.display = (typeof currentUser !== 'undefined' && currentUser) ? 'none' : '';
   const cfg   = activeConfig();
   const boEl  = document.querySelector('input[name="best_of"][value="' + cfg.best_of + '"]');
   const dEl   = document.querySelector('input[name="difficulty"][value="' + cfg.difficulty + '"]');

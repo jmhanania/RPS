@@ -137,6 +137,9 @@ var currentUsername = null;   // Chosen RPS handle (accessible from game.js)
     setDisplay('btn-change-username',  hasHandle ? '' : 'none');
     setDisplay('btn-settings-signout', signedIn  ? '' : 'none');
 
+    // Guest sign-in prompt on settings screen
+    setDisplay('settings-signin-prompt',   signedIn  ? 'none' : '');
+
     // Leaderboard + sign-out on other screens (guests can't access leaderboard)
     setDisplay('btn-settings-leaderboard', hasHandle ? '' : 'none');
     setDisplay('mop-leaderboard',          hasHandle ? '' : 'none');
