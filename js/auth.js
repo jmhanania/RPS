@@ -85,18 +85,37 @@ var currentUsername = null;   // Chosen RPS handle (accessible from game.js)
       return;
     }
 
-    errorEl.textContent       = '';
-    submitBtn.disabled        = true;
-    submitBtn.textContent     = 'Saving…';
+    errorEl.textContent   = '';
+    submitBtn.disabled    = true;
+    submitBtn.textContent = 'Saving…';
 
-    firebase.firestore().collection('users').doc(currentUser.uid).set({ username: handle })
+    var db          = firebase.firestore();
+    var newKey      = handle.toLowerCase();
+    var oldKey      = currentUsername ? currentUsername.toLowerCase() : null;
+    var usernameRef = db.collection('usernames').doc(newKey);
+    var userRef     = db.collection('users').doc(currentUser.uid);
+
+    db.runTransaction(function (tx) {
+      return tx.get(usernameRef).then(function (doc) {
+        if (doc.exists && doc.data().uid !== currentUser.uid) {
+          return Promise.reject('taken');
+        }
+        if (oldKey && oldKey !== newKey) {
+          tx.delete(db.collection('usernames').doc(oldKey));
+        }
+        tx.set(usernameRef, { uid: currentUser.uid });
+        tx.set(userRef, { username: handle });
+      });
+    })
       .then(function () {
         currentUsername = handle;
         document.getElementById('modal-username').style.display = 'none';
         updateAuthUI();
       })
-      .catch(function () {
-        errorEl.textContent   = 'Could not save — please try again.';
+      .catch(function (err) {
+        errorEl.textContent   = err === 'taken'
+          ? 'That handle is already taken — try another.'
+          : 'Could not save — please try again.';
         submitBtn.disabled    = false;
         submitBtn.textContent = "Let's Play";
       });
