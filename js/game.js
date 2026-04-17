@@ -636,10 +636,6 @@ function renderSettingsScreen() {
   if (cEl) cEl.checked = true;
 }
 
-$('btn-settings-back').addEventListener('click', function() {
-  renderProfileScreen();
-  show('screen-profile');
-});
 
 $('btn-settings-play').addEventListener('click', function() {
   const cfg     = activeConfig();
