@@ -37,8 +37,8 @@ var currentUsername = null;   // Chosen RPS handle (accessible from game.js)
 
   // ── Sign-in / Sign-out ────────────────────────────────────
   window.signIn = function () {
-    firebase.auth().signInWithPopup(provider).catch(function (err) {
-      console.warn('Sign-in error:', err.message);
+    firebase.auth().signInWithPopup(provider).catch(function () {
+      console.warn('Sign-in failed');
     });
   };
 
@@ -101,6 +101,10 @@ var currentUsername = null;   // Chosen RPS handle (accessible from game.js)
 
     // Settings screen
     setDisplay('btn-change-username', hasHandle ? '' : 'none');
+
+    // Leaderboard buttons — guests cannot submit, so hide entry points
+    setDisplay('btn-settings-leaderboard', hasHandle ? '' : 'none');
+    setDisplay('mop-leaderboard',          hasHandle ? '' : 'none');
 
     // Match-over panel
     setDisplay('mop-sign-in',  signedIn ? 'none' : '');
