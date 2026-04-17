@@ -8,15 +8,6 @@ var currentUsername = null;   // Chosen RPS handle (accessible from game.js)
 (function () {
   var provider = new firebase.auth.GoogleAuthProvider();
 
-  // ── Pick up redirect result (no-op if no redirect pending) ───
-  firebase.auth().getRedirectResult().catch(function (err) {
-    if (err.code !== 'auth/popup-closed-by-user') {
-      var el = document.getElementById('auth-signin-error');
-      if (el) el.textContent = 'Sign-in failed — please try again.';
-      console.warn('Sign-in failed:', err.code);
-    }
-  });
-
   // ── Auth state ────────────────────────────────────────────
   firebase.auth().onAuthStateChanged(function (user) {
     currentUser = user;
@@ -46,9 +37,16 @@ var currentUsername = null;   // Chosen RPS handle (accessible from game.js)
 
   // ── Sign-in / Sign-out ────────────────────────────────────
   window.signIn = function () {
-    var el = document.getElementById('auth-signin-error');
-    if (el) el.textContent = '';
-    firebase.auth().signInWithRedirect(provider);
+    var errorEl = document.getElementById('auth-signin-error');
+    if (errorEl) errorEl.textContent = '';
+    firebase.auth().signInWithPopup(provider).catch(function (err) {
+      if (err.code === 'auth/popup-blocked') {
+        if (errorEl) errorEl.textContent = 'Popup blocked — please allow popups for this site and try again.';
+      } else if (err.code !== 'auth/popup-closed-by-user' && err.code !== 'auth/cancelled-popup-request') {
+        if (errorEl) errorEl.textContent = 'Sign-in failed — please try again.';
+        console.warn('Sign-in failed:', err.code);
+      }
+    });
   };
 
   window.signOut = function () {
