@@ -24,6 +24,18 @@ service cloud.firestore {
           && !('email' in data);
     }
 
+    // Stats can only increase, and no single write can add more than 50 games.
+    function isMonotoneUpdate(next, prev) {
+      return next.wins    >= prev.wins
+          && next.losses  >= prev.losses
+          && next.ties    >= prev.ties
+          && next.rock    >= prev.rock
+          && next.paper   >= prev.paper
+          && next.scissors >= prev.scissors
+          && (next.wins   + next.losses   + next.ties)
+           - (prev.wins   + prev.losses   + prev.ties) <= 50;
+    }
+
     // ── Usernames ─────────────────────────────────────────────────────────────
     // Each document ID is a lowercased handle; value is { uid } of the owner.
     // Enforces global uniqueness — claimed atomically via client transaction.
@@ -57,11 +69,18 @@ service cloud.firestore {
     // ── Leaderboard ───────────────────────────────────────────────────────────
 
     match /{collection}/{userId} {
-      allow read:  if isLeaderboard(collection);
-      allow write: if isLeaderboard(collection)
+      allow read:   if isLeaderboard(collection);
+      allow create: if isLeaderboard(collection)
                    && request.auth != null
                    && request.auth.uid == userId
-                   && isValidEntry(request.resource.data);
+                   && isValidEntry(request.resource.data)
+                   && request.resource.data.wins + request.resource.data.losses
+                    + request.resource.data.ties <= 50;
+      allow update: if isLeaderboard(collection)
+                   && request.auth != null
+                   && request.auth.uid == userId
+                   && isValidEntry(request.resource.data)
+                   && isMonotoneUpdate(request.resource.data, resource.data);
     }
   }
 }
