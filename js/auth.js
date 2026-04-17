@@ -16,6 +16,12 @@ var currentUsername = null;   // Chosen RPS handle (accessible from game.js)
     } else {
       currentUsername = null;
       updateAuthUI();
+      // Navigate to profile screen on sign-out
+      document.querySelectorAll('.screen').forEach(function(s) { s.classList.remove('active'); });
+      var ps = document.getElementById('screen-profile');
+      if (ps) ps.classList.add('active');
+      var gi = document.getElementById('guest-name');
+      if (gi) gi.value = '';
     }
   });
 
@@ -112,16 +118,6 @@ var currentUsername = null;   // Chosen RPS handle (accessible from game.js)
     // Leaderboard buttons — guests cannot submit, so hide entry points
     setDisplay('btn-settings-leaderboard', hasHandle ? '' : 'none');
     setDisplay('mop-leaderboard',          hasHandle ? '' : 'none');
-
-    // Match-over panel
-    setDisplay('mop-sign-in',  signedIn ? 'none' : '');
-    setDisplay('mop-sign-out', signedIn ? ''     : 'none');
-    setText('mop-auth-name', currentUsername || '');
-
-    var submitBtn = document.getElementById('mop-submit-score');
-    if (submitBtn && submitBtn.dataset.submitted !== 'true') {
-      submitBtn.disabled = !hasHandle;
-    }
   }
 
   function setDisplay(id, val) {

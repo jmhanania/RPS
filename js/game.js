@@ -197,7 +197,7 @@ function fetchAndRenderLeaderboard() {
       }).join('');
     })
     .catch(function() {
-      tbody.innerHTML = '<tr><td colspan="' + N + '" class="lb-loading" style="color:var(--loss)">Failed to load — check your connection.</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="' + N + '" class="lb-loading">No scores yet — be the first to claim the throne! 👑</td></tr>';
     });
 }
 
@@ -794,9 +794,8 @@ document.querySelectorAll('.choice-btn').forEach(function(btn) {
 });
 
 $('btn-game-stats').addEventListener('click', function() {
-  match.statsReturn = 'screen-game';
-  renderStatsScreen();
-  show('screen-stats');
+  renderProfileScreen();
+  show('screen-profile');
 });
 
 $('btn-end-game').addEventListener('click', endMatch);
@@ -826,13 +825,10 @@ function endMatch() {
     else if (tied) stats.by_difficulty[d].ties++;
     else stats.by_difficulty[d].losses++;
     saveAll();
+    if (currentUser && currentUsername) {
+      syncToLeaderboard(currentUser.uid, currentUsername, activeStats());
+    }
   }
-
-  // Reset submit button for this match
-  var submitBtn = $('mop-submit-score');
-  submitBtn.textContent       = 'Submit Score to Leaderboard';
-  submitBtn.dataset.submitted = 'false';
-  submitBtn.disabled          = !(currentUser && currentUsername);
 
   // Swap choice buttons for the panel, hide End Game CTA
   $('choices-row').style.display      = 'none';
@@ -843,21 +839,6 @@ function endMatch() {
 
 $('mop-play-again').addEventListener('click', startMatch);
 
-$('mop-submit-score').addEventListener('click', function() {
-  if (!currentUser || !currentUsername) return;
-  var btn = $('mop-submit-score');
-  btn.disabled    = true;
-  btn.textContent = 'Submitting…';
-  syncToLeaderboard(currentUser.uid, currentUsername, activeStats())
-    .then(function() {
-      btn.textContent       = 'Score Submitted ✓';
-      btn.dataset.submitted = 'true';
-    })
-    .catch(function() {
-      btn.textContent = 'Submit failed — try again';
-      btn.disabled    = false;
-    });
-});
 $('mop-view-stats').addEventListener('click', function() {
   match.statsReturn = 'screen-game';
   renderStatsScreen();
@@ -871,10 +852,6 @@ $('mop-leaderboard').addEventListener('click', function() {
 $('mop-change-settings').addEventListener('click', function() {
   renderSettingsScreen();
   show('screen-settings');
-});
-$('mop-switch-player').addEventListener('click', function() {
-  renderProfileScreen();
-  show('screen-profile');
 });
 
 // ── Stats screen ─────────────────────────────────────────────
