@@ -418,16 +418,36 @@ input[type="checkbox"] { accent-color: var(--accent); width: 15px; height: 15px;
   inset: 0;
   background: rgba(0, 0, 0, 0.65);
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
   z-index: 200;
-  padding: 16px;
+  padding: max(80px, 18vh) 16px 16px;
 }
 .modal-card {
+  position: relative;
   max-width: 400px;
   width: 100%;
   animation: pop-in 0.18s ease;
 }
+.modal-close-btn {
+  position: absolute;
+  top: -12px;
+  right: -12px;
+  background: rgba(255,255,255,0.10);
+  border: 1px solid rgba(255,255,255,0.18);
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  font-size: 0.78rem;
+  color: var(--muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background .15s, color .15s;
+}
+.modal-close-btn:hover { background: rgba(255,255,255,0.22); color: var(--text); }
 .username-error {
   color: var(--loss);
   font-size: 0.82rem;

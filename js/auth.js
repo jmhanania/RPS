@@ -75,6 +75,13 @@ var currentUsername = null;   // Chosen RPS handle (accessible from game.js)
 
   window.changeUsername = showUsernameModal;
 
+  window.cancelUsername = function () {
+    document.getElementById('modal-username').style.display = 'none';
+    if (!currentUsername) {
+      firebase.auth().signOut();
+    }
+  };
+
   window.submitUsername = function () {
     var input     = document.getElementById('username-input');
     var errorEl   = document.getElementById('username-error');
