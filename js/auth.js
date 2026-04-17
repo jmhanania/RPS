@@ -113,11 +113,15 @@ var currentUsername = null;   // Chosen RPS handle (accessible from game.js)
     setText('auth-handle-display', currentUsername || '');
 
     // Settings screen
-    setDisplay('btn-change-username', hasHandle ? '' : 'none');
+    setDisplay('btn-change-username',  hasHandle ? '' : 'none');
+    setDisplay('btn-settings-signout', signedIn  ? '' : 'none');
 
-    // Leaderboard buttons — guests cannot submit, so hide entry points
+    // Leaderboard + sign-out on other screens (guests can't access leaderboard)
     setDisplay('btn-settings-leaderboard', hasHandle ? '' : 'none');
     setDisplay('mop-leaderboard',          hasHandle ? '' : 'none');
+    setDisplay('mop-signout',              signedIn  ? '' : 'none');
+    setDisplay('btn-stats-signout',        signedIn  ? '' : 'none');
+    setDisplay('btn-lb-signout',           signedIn  ? '' : 'none');
   }
 
   function setDisplay(id, val) {

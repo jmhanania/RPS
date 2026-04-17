@@ -92,7 +92,8 @@
 
       <button id="btn-settings-stats"       class="btn-secondary" style="width:100%;margin-bottom:10px;">View My Stats</button>
       <button id="btn-settings-leaderboard" class="btn-secondary" style="width:100%;margin-bottom:10px;display:none">🏆 Leaderboard</button>
-      <button id="btn-change-username" class="btn-secondary" style="width:100%;margin-bottom:10px;display:none" onclick="changeUsername()">Change Username</button>
+      <button id="btn-change-username"      class="btn-secondary" style="width:100%;margin-bottom:10px;display:none" onclick="changeUsername()">Change Username</button>
+      <button id="btn-settings-signout"     class="btn-ghost"     style="width:100%;margin-bottom:10px;display:none" onclick="signOut()">Sign out</button>
 
       <div class="btn-row">
         <button id="btn-settings-back" class="btn-secondary">← Back</button>
@@ -161,6 +162,7 @@
           <button id="mop-view-stats"      class="btn-secondary">View Stats</button>
           <button id="mop-leaderboard"     class="btn-secondary" style="display:none">🏆 Leaderboard</button>
           <button id="mop-change-settings" class="btn-secondary">Change Settings</button>
+          <button id="mop-signout"         class="btn-ghost" style="display:none" onclick="signOut()">Sign out</button>
         </div>
       </div>
     </div>
@@ -189,6 +191,7 @@
       </div>
 
       <button id="btn-stats-back" class="btn-primary">← Back</button>
+      <button id="btn-stats-signout" class="btn-ghost" style="width:100%;margin-top:10px;display:none" onclick="signOut()">Sign out</button>
     </div>
   </div>
 
@@ -209,6 +212,7 @@
 
       <div style="margin-top:22px">
         <button id="btn-lb-back" class="btn-primary">← Back</button>
+        <button id="btn-lb-signout" class="btn-ghost" style="width:100%;margin-top:10px;display:none" onclick="signOut()">Sign out</button>
       </div>
     </div>
   </div>
