@@ -624,6 +624,10 @@ $('guest-name').addEventListener('keydown', function(e) {
 
 // ── Settings screen ─────────────────────────────────────────
 function renderSettingsScreen() {
+  var isSignedIn = (typeof currentUser !== 'undefined' && currentUser &&
+                    typeof currentUsername !== 'undefined' && currentUsername);
+  var greetEl = $('settings-greeting');
+  if (greetEl) greetEl.textContent = isSignedIn ? 'Welcome back,' : 'Welcome,';
   $('settings-profile-name').textContent = match.player;
   const cfg   = activeConfig();
   const boEl  = document.querySelector('input[name="best_of"][value="' + cfg.best_of + '"]');
@@ -790,8 +794,13 @@ document.querySelectorAll('.choice-btn').forEach(function(btn) {
 });
 
 $('btn-game-stats').addEventListener('click', function() {
-  renderProfileScreen();
-  show('screen-profile');
+  if (match.player) {
+    renderSettingsScreen();
+    show('screen-settings');
+  } else {
+    renderProfileScreen();
+    show('screen-profile');
+  }
 });
 
 $('btn-end-game').addEventListener('click', endMatch);
@@ -903,22 +912,17 @@ $('btn-stats-back').addEventListener('click', function() {
 });
 
 // ── Leaderboard screen ───────────────────────────────────────
-$('btn-auth-play').addEventListener('click', function() {
-  if (!currentUsername) return;
-  enterProfile(currentUsername);
-});
-
-$('btn-profile-leaderboard').addEventListener('click', function() {
-  match.lbReturn = 'screen-profile';
-  renderLeaderboardScreen();
-  show('screen-leaderboard');
-});
-
 $('btn-lb-back').addEventListener('click', function() {
   show(match.lbReturn || 'screen-profile');
 });
 
 // ── Boot ─────────────────────────────────────────────────────
+window.goToSettings = function(name) {
+  if ($('screen-profile').classList.contains('active')) {
+    enterProfile(name);
+  }
+};
+
 loadAll();
 renderProfileScreen();
 show('screen-profile');

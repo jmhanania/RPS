@@ -31,6 +31,7 @@ var currentUsername = null;   // Chosen RPS handle (accessible from game.js)
         if (doc.exists && doc.data().username) {
           currentUsername = doc.data().username;
           updateAuthUI();
+          if (window.goToSettings) window.goToSettings(currentUsername);
         } else {
           showUsernameModal();
         }
@@ -111,6 +112,7 @@ var currentUsername = null;   // Chosen RPS handle (accessible from game.js)
         currentUsername = handle;
         document.getElementById('modal-username').style.display = 'none';
         updateAuthUI();
+        if (window.goToSettings) window.goToSettings(currentUsername);
       })
       .catch(function (err) {
         errorEl.textContent   = err === 'taken'

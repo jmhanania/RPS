@@ -16,13 +16,7 @@
 
       <!-- ── Signed-in ─────────────────────────────────── -->
       <div id="auth-signed-in" style="display:none">
-        <p class="sub" style="text-align:center;margin-top:6px">Welcome back,</p>
-        <p id="auth-handle-display" class="auth-handle"></p>
-        <div class="btn-col" style="margin-top:16px">
-          <button id="btn-auth-play"          class="btn-primary">Play →</button>
-          <button id="btn-profile-leaderboard" class="btn-secondary">🏆 Leaderboard</button>
-          <button class="btn-ghost" style="width:100%" onclick="signOut()">Sign out</button>
-        </div>
+        <p id="auth-handle-display" class="auth-handle" style="text-align:center;margin-top:16px"></p>
       </div>
 
       <!-- ── Signed-out (shown immediately on load) ────── -->
@@ -57,8 +51,8 @@
   <!-- ── Settings ──────────────────────────────────────────────────────── -->
   <div id="screen-settings" class="screen">
     <div class="card">
-      <h2>Settings</h2>
-      <p class="sub">Playing as <strong id="settings-profile-name"></strong></p>
+      <p class="sub" id="settings-greeting">Welcome,</p>
+      <p id="settings-profile-name" class="auth-handle"></p>
 
       <div class="setting-block">
         <h3>Match length</h3>
