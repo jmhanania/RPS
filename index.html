@@ -24,10 +24,10 @@
         <div class="play-path">
           <h3>Play as Guest</h3>
           <p class="path-note">Stats saved on this device only &mdash; won't appear on the leaderboard</p>
-          <div class="input-row" style="margin-top:10px">
+          <form class="input-row" style="margin-top:10px" autocomplete="off" onsubmit="return false">
             <input type="text" id="guest-name" placeholder="Your name…" maxlength="24" autocomplete="off">
             <button id="btn-guest-play" class="btn-primary">Play →</button>
-          </div>
+          </form>
         </div>
 
         <div class="divider">or</div>
@@ -229,11 +229,11 @@
       <button class="modal-close-btn" onclick="cancelUsername()" title="Cancel">✕</button>
       <h2>Pick your RPS Handle</h2>
       <p class="sub">This is the name that will appear on the leaderboard.</p>
-      <div class="input-row">
+      <form class="input-row" autocomplete="off" onsubmit="return false">
         <input type="text" id="username-input" placeholder="e.g. RockMaster99" maxlength="24" autocomplete="off"
                onkeydown="if(event.key==='Enter') submitUsername()">
         <button id="btn-username-submit" class="btn-primary" onclick="submitUsername()">Let's Play</button>
-      </div>
+      </form>
       <p id="username-error" class="username-error"></p>
     </div>
   </div>
