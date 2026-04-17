@@ -19,7 +19,7 @@ exports.syncUsernameToLeaderboard = onDocumentUpdated("users/{userId}", async (e
 
   const batch = db.batch();
   for (let i = 0; i <= 4; i++) {
-    const ref = db.collection(`leaderboard_${i}`).doc(userId);
+    const ref = db.collection(`v2_leaderboard_${i}`).doc(userId);
     batch.set(ref, { name: newName }, { merge: true });
   }
 

@@ -6,8 +6,8 @@ service cloud.firestore {
     // ── Helpers ───────────────────────────────────────────────────────────────
 
     function isLeaderboard(col) {
-      return col in ['leaderboard_0', 'leaderboard_1', 'leaderboard_2',
-                     'leaderboard_3', 'leaderboard_4'];
+      return col in ['v2_leaderboard_0', 'v2_leaderboard_1', 'v2_leaderboard_2',
+                     'v2_leaderboard_3', 'v2_leaderboard_4'];
     }
 
     function isNonNegInt(v) {
