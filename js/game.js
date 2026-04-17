@@ -93,7 +93,7 @@ function syncToLeaderboard(uid, playerName, stats) {
     totalLosses += r.losses;
     totalTies   += r.ties;
     if (r.wins + r.losses + r.ties === 0) continue;
-    writes.push(db.collection('leaderboard_' + d).doc(uid).set({
+    writes.push(db.collection('v2_leaderboard_' + d).doc(uid).set({
       name:      playerName,
       wins:      r.wins,
       losses:    r.losses,
@@ -105,7 +105,7 @@ function syncToLeaderboard(uid, playerName, stats) {
     }));
   }
   if (totalWins + totalLosses + totalTies > 0) {
-    writes.push(db.collection('leaderboard_0').doc(uid).set({
+    writes.push(db.collection('v2_leaderboard_0').doc(uid).set({
       name:      playerName,
       wins:      totalWins,
       losses:    totalLosses,
@@ -162,7 +162,7 @@ function fetchAndRenderLeaderboard() {
     tbody.innerHTML = '<tr><td colspan="' + N + '" class="lb-loading" style="color:var(--loss)">Leaderboard unavailable.</td></tr>';
     return;
   }
-  db.collection('leaderboard_' + currentLbDiff).orderBy('wins', 'desc').limit(100).get()
+  db.collection('v2_leaderboard_' + currentLbDiff).orderBy('wins', 'desc').limit(100).get()
     .then(function(snap) {
       if (snap.empty) {
         tbody.innerHTML = '<tr><td colspan="' + N + '" class="lb-loading">No entries yet — play a match to appear here!</td></tr>';
