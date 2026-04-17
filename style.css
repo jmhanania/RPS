@@ -457,17 +457,17 @@ input[type="checkbox"] { accent-color: var(--accent); width: 15px; height: 15px;
   justify-content: center;
   gap: 10px;
   width: 100%;
-  padding: 12px 20px;
-  background: #fff;
-  color: #1f1f1f;
-  border: 1px solid #dadce0;
+  padding: 13px 20px;
+  background: var(--surface2);
+  color: var(--text);
+  border: 1px solid var(--border);
   border-radius: var(--r-sm);
   font-size: 0.95rem;
-  font-weight: 500;
+  font-weight: 600;
   cursor: pointer;
-  transition: background .15s, box-shadow .15s;
+  transition: background .15s, border-color .15s;
 }
-.btn-google:hover { background: #f8f9fa; box-shadow: 0 1px 8px rgba(0,0,0,.18); }
+.btn-google:hover { background: var(--border); border-color: var(--accent); }
 
 /* ── Auth row (match-over) ───────────────────────────────────────────────── */
 .auth-row { margin-top: 14px; text-align: center; }

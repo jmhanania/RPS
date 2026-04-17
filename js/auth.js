@@ -8,6 +8,15 @@ var currentUsername = null;   // Chosen RPS handle (accessible from game.js)
 (function () {
   var provider = new firebase.auth.GoogleAuthProvider();
 
+  // ── Pick up redirect result (no-op if no redirect pending) ───
+  firebase.auth().getRedirectResult().catch(function (err) {
+    if (err.code !== 'auth/popup-closed-by-user') {
+      var el = document.getElementById('auth-signin-error');
+      if (el) el.textContent = 'Sign-in failed — please try again.';
+      console.warn('Sign-in failed:', err.code);
+    }
+  });
+
   // ── Auth state ────────────────────────────────────────────
   firebase.auth().onAuthStateChanged(function (user) {
     currentUser = user;
@@ -37,9 +46,9 @@ var currentUsername = null;   // Chosen RPS handle (accessible from game.js)
 
   // ── Sign-in / Sign-out ────────────────────────────────────
   window.signIn = function () {
-    firebase.auth().signInWithPopup(provider).catch(function () {
-      console.warn('Sign-in failed');
-    });
+    var el = document.getElementById('auth-signin-error');
+    if (el) el.textContent = '';
+    firebase.auth().signInWithRedirect(provider);
   };
 
   window.signOut = function () {
