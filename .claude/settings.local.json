@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(firebase --version)",
+      "Bash(npm install:*)",
+      "mcp__firebase__firebase_get_environment",
+      "mcp__firebase__firebase_login",
+      "Bash(firebase login:*)",
+      "mcp__firebase__firebase_list_projects",
+      "mcp__firebase__firebase_init",
+      "Bash(firebase deploy:*)",
+      "Bash(firebase functions:artifacts:setpolicy:*)"
+    ]
+  }
+}

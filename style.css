@@ -412,6 +412,79 @@ input[type="checkbox"] { accent-color: var(--accent); width: 15px; height: 15px;
 .end-game-btn { color: var(--loss); font-size: 0.8rem; font-weight: 600; }
 .end-game-btn:hover { color: #fca5a5; }
 
+/* ── Username modal ───────────────────────────────────────────────────────── */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.65);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+  padding: 16px;
+}
+.modal-card {
+  max-width: 400px;
+  width: 100%;
+  animation: pop-in 0.18s ease;
+}
+.username-error {
+  color: var(--loss);
+  font-size: 0.82rem;
+  margin-top: 8px;
+  min-height: 1.2em;
+}
+
+/* ── Guest path block ────────────────────────────────────────────────────── */
+.play-path {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 18px 16px 20px;
+  margin-top: 16px;
+}
+.path-note {
+  font-size: 0.78rem;
+  color: var(--muted);
+  margin-top: 4px;
+  line-height: 1.4;
+}
+
+/* ── Google sign-in button ───────────────────────────────────────────────── */
+.btn-google {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  padding: 13px 20px;
+  background: var(--surface2);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background .15s, border-color .15s;
+}
+.btn-google:hover { background: var(--border); border-color: var(--accent); }
+
+/* ── Auth row (match-over) ───────────────────────────────────────────────── */
+.auth-row { margin-top: 14px; text-align: center; }
+.auth-row .sub { display: block; font-size: 0.8rem; margin-bottom: 4px; color: var(--muted); }
+
+/* ── Auth handle display (profile screen signed-in view) ─────────────────── */
+.auth-handle {
+  text-align: center;
+  font-size: 1.6rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, var(--accent-light), #c4b5fd);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-top: 2px;
+}
+
 /* ── Match-over panel (in-game) ───────────────────────────────────────────── */
 .mop-card    { margin-top: 8px; }
 .mop-subtitle { text-align: center; color: var(--muted); margin-top: 4px; font-size: 0.9rem; }

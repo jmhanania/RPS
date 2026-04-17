@@ -81,10 +81,11 @@ function lbSortValue(d, field) {
   return 0;
 }
 
-function syncToLeaderboard(playerName, stats) {
-  if (!db) return;
+function syncToLeaderboard(uid, playerName, stats) {
+  if (!db) return Promise.reject(new Error('No database'));
   const totals = stats.totals || { rock: 0, paper: 0, scissors: 0 };
   const bd = stats.by_difficulty || {};
+  const writes = [];
   let totalWins = 0, totalLosses = 0, totalTies = 0;
   for (var d = 1; d <= 4; d++) {
     const r = bd[d] || { wins: 0, losses: 0, ties: 0 };
@@ -92,7 +93,7 @@ function syncToLeaderboard(playerName, stats) {
     totalLosses += r.losses;
     totalTies   += r.ties;
     if (r.wins + r.losses + r.ties === 0) continue;
-    db.collection('leaderboard_' + d).doc(playerName).set({
+    writes.push(db.collection('v2_leaderboard_' + d).doc(uid).set({
       name:      playerName,
       wins:      r.wins,
       losses:    r.losses,
@@ -101,10 +102,10 @@ function syncToLeaderboard(playerName, stats) {
       paper:     totals.paper    || 0,
       scissors:  totals.scissors || 0,
       updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
-    }).catch(function() {});
+    }));
   }
   if (totalWins + totalLosses + totalTies > 0) {
-    db.collection('leaderboard_0').doc(playerName).set({
+    writes.push(db.collection('v2_leaderboard_0').doc(uid).set({
       name:      playerName,
       wins:      totalWins,
       losses:    totalLosses,
@@ -113,8 +114,9 @@ function syncToLeaderboard(playerName, stats) {
       paper:     totals.paper    || 0,
       scissors:  totals.scissors || 0,
       updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
-    }).catch(function() {});
+    }));
   }
+  return Promise.all(writes);
 }
 
 function renderLeaderboardScreen() {
@@ -160,7 +162,7 @@ function fetchAndRenderLeaderboard() {
     tbody.innerHTML = '<tr><td colspan="' + N + '" class="lb-loading" style="color:var(--loss)">Leaderboard unavailable.</td></tr>';
     return;
   }
-  db.collection('leaderboard_' + currentLbDiff).orderBy('wins', 'desc').limit(100).get()
+  db.collection('v2_leaderboard_' + currentLbDiff).orderBy('wins', 'desc').limit(100).get()
     .then(function(snap) {
       if (snap.empty) {
         tbody.innerHTML = '<tr><td colspan="' + N + '" class="lb-loading">No entries yet — play a match to appear here!</td></tr>';
@@ -195,7 +197,7 @@ function fetchAndRenderLeaderboard() {
       }).join('');
     })
     .catch(function() {
-      tbody.innerHTML = '<tr><td colspan="' + N + '" class="lb-loading" style="color:var(--loss)">Failed to load — check your connection.</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="' + N + '" class="lb-loading">No scores yet — be the first to claim the throne! 👑</td></tr>';
     });
 }
 
@@ -597,44 +599,9 @@ function activeConfig() { return store.config.profiles[match.player]; }
 
 // ── Profile screen ──────────────────────────────────────────
 function renderProfileScreen() {
-  const list  = $('profile-list');
-  list.innerHTML = '';
-  const names = profileNames();
-  $('profile-divider').style.display = names.length ? '' : 'none';
-  for (const name of names) {
-    const row = document.createElement('div');
-    row.className = 'profile-row';
-
-    const btn = document.createElement('button');
-    btn.className = 'profile-btn';
-    const last = store.config.last_profile === name;
-    btn.innerHTML = '<span class="profile-icon">👤</span>'
-      + '<span class="profile-name">' + name + '</span>'
-      + (last ? '<span class="profile-badge">last played</span>' : '');
-    btn.addEventListener('click', function() { enterProfile(name); });
-
-    const del = document.createElement('button');
-    del.className = 'profile-delete-btn';
-    del.title     = 'Delete profile';
-    del.textContent = '🗑️';
-    del.addEventListener('click', function(e) {
-      e.stopPropagation();
-      deleteProfile(name);
-    });
-
-    row.appendChild(btn);
-    row.appendChild(del);
-    list.appendChild(row);
-  }
-}
-
-function deleteProfile(name) {
-  if (!confirm('Delete "' + name + '"? This cannot be undone.')) return;
-  delete store.stats.profiles[name];
-  delete store.config.profiles[name];
-  if (store.config.last_profile === name) store.config.last_profile = null;
-  saveAll();
-  renderProfileScreen();
+  // auth.js manages signed-in/signed-out display; just clear the guest input
+  var guestInput = $('guest-name');
+  if (guestInput) guestInput.value = '';
 }
 
 function enterProfile(name) {
@@ -646,14 +613,13 @@ function enterProfile(name) {
   show('screen-settings');
 }
 
-$('btn-create-profile').addEventListener('click', function() {
-  const name = $('new-profile-name').value.trim();
+$('btn-guest-play').addEventListener('click', function() {
+  const name = $('guest-name').value.trim();
   if (!name) return;
-  $('new-profile-name').value = '';
   enterProfile(name);
 });
-$('new-profile-name').addEventListener('keydown', function(e) {
-  if (e.key === 'Enter') $('btn-create-profile').click();
+$('guest-name').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') $('btn-guest-play').click();
 });
 
 // ── Settings screen ─────────────────────────────────────────
@@ -828,9 +794,8 @@ document.querySelectorAll('.choice-btn').forEach(function(btn) {
 });
 
 $('btn-game-stats').addEventListener('click', function() {
-  match.statsReturn = 'screen-game';
-  renderStatsScreen();
-  show('screen-stats');
+  renderProfileScreen();
+  show('screen-profile');
 });
 
 $('btn-end-game').addEventListener('click', endMatch);
@@ -860,9 +825,10 @@ function endMatch() {
     else if (tied) stats.by_difficulty[d].ties++;
     else stats.by_difficulty[d].losses++;
     saveAll();
+    if (currentUser && currentUsername) {
+      syncToLeaderboard(currentUser.uid, currentUsername, activeStats());
+    }
   }
-
-  syncToLeaderboard(match.player, activeStats());
 
   // Swap choice buttons for the panel, hide End Game CTA
   $('choices-row').style.display      = 'none';
@@ -872,6 +838,7 @@ function endMatch() {
 }
 
 $('mop-play-again').addEventListener('click', startMatch);
+
 $('mop-view-stats').addEventListener('click', function() {
   match.statsReturn = 'screen-game';
   renderStatsScreen();
@@ -885,10 +852,6 @@ $('mop-leaderboard').addEventListener('click', function() {
 $('mop-change-settings').addEventListener('click', function() {
   renderSettingsScreen();
   show('screen-settings');
-});
-$('mop-switch-player').addEventListener('click', function() {
-  renderProfileScreen();
-  show('screen-profile');
 });
 
 // ── Stats screen ─────────────────────────────────────────────
@@ -944,6 +907,11 @@ $('btn-stats-back').addEventListener('click', function() {
 });
 
 // ── Leaderboard screen ───────────────────────────────────────
+$('btn-auth-play').addEventListener('click', function() {
+  if (!currentUsername) return;
+  enterProfile(currentUsername);
+});
+
 $('btn-profile-leaderboard').addEventListener('click', function() {
   match.lbReturn = 'screen-profile';
   renderLeaderboardScreen();
