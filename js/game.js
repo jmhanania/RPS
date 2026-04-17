@@ -81,10 +81,11 @@ function lbSortValue(d, field) {
   return 0;
 }
 
-function syncToLeaderboard(playerName, stats) {
-  if (!db) return;
+function syncToLeaderboard(uid, playerName, stats) {
+  if (!db) return Promise.reject(new Error('No database'));
   const totals = stats.totals || { rock: 0, paper: 0, scissors: 0 };
   const bd = stats.by_difficulty || {};
+  const writes = [];
   let totalWins = 0, totalLosses = 0, totalTies = 0;
   for (var d = 1; d <= 4; d++) {
     const r = bd[d] || { wins: 0, losses: 0, ties: 0 };
@@ -92,7 +93,7 @@ function syncToLeaderboard(playerName, stats) {
     totalLosses += r.losses;
     totalTies   += r.ties;
     if (r.wins + r.losses + r.ties === 0) continue;
-    db.collection('leaderboard_' + d).doc(playerName).set({
+    writes.push(db.collection('leaderboard_' + d).doc(uid).set({
       name:      playerName,
       wins:      r.wins,
       losses:    r.losses,
@@ -101,10 +102,10 @@ function syncToLeaderboard(playerName, stats) {
       paper:     totals.paper    || 0,
       scissors:  totals.scissors || 0,
       updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
-    }).catch(function() {});
+    }));
   }
   if (totalWins + totalLosses + totalTies > 0) {
-    db.collection('leaderboard_0').doc(playerName).set({
+    writes.push(db.collection('leaderboard_0').doc(uid).set({
       name:      playerName,
       wins:      totalWins,
       losses:    totalLosses,
@@ -113,8 +114,9 @@ function syncToLeaderboard(playerName, stats) {
       paper:     totals.paper    || 0,
       scissors:  totals.scissors || 0,
       updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
-    }).catch(function() {});
+    }));
   }
+  return Promise.all(writes);
 }
 
 function renderLeaderboardScreen() {
@@ -862,7 +864,11 @@ function endMatch() {
     saveAll();
   }
 
-  syncToLeaderboard(match.player, activeStats());
+  // Reset submit button for this match
+  var submitBtn = $('mop-submit-score');
+  submitBtn.textContent       = 'Submit Score to Leaderboard';
+  submitBtn.dataset.submitted = 'false';
+  submitBtn.disabled          = !(currentUser && currentUsername);
 
   // Swap choice buttons for the panel, hide End Game CTA
   $('choices-row').style.display      = 'none';
@@ -872,6 +878,22 @@ function endMatch() {
 }
 
 $('mop-play-again').addEventListener('click', startMatch);
+
+$('mop-submit-score').addEventListener('click', function() {
+  if (!currentUser || !currentUsername) return;
+  var btn = $('mop-submit-score');
+  btn.disabled    = true;
+  btn.textContent = 'Submitting…';
+  syncToLeaderboard(currentUser.uid, currentUsername, activeStats())
+    .then(function() {
+      btn.textContent       = 'Score Submitted ✓';
+      btn.dataset.submitted = 'true';
+    })
+    .catch(function() {
+      btn.textContent = 'Submit failed — try again';
+      btn.disabled    = false;
+    });
+});
 $('mop-view-stats').addEventListener('click', function() {
   match.statsReturn = 'screen-game';
   renderStatsScreen();
@@ -944,6 +966,11 @@ $('btn-stats-back').addEventListener('click', function() {
 });
 
 // ── Leaderboard screen ───────────────────────────────────────
+$('btn-auth-play').addEventListener('click', function() {
+  if (!currentUsername) return;
+  enterProfile(currentUsername);
+});
+
 $('btn-profile-leaderboard').addEventListener('click', function() {
   match.lbReturn = 'screen-profile';
   renderLeaderboardScreen();

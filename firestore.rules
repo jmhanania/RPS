@@ -1,0 +1,50 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ── Helpers ───────────────────────────────────────────────────────────────
+
+    function isLeaderboard(col) {
+      return col in ['leaderboard_0', 'leaderboard_1', 'leaderboard_2',
+                     'leaderboard_3', 'leaderboard_4'];
+    }
+
+    function isNonNegInt(v) {
+      return v is int && v >= 0;
+    }
+
+    function isValidEntry(data) {
+      return isNonNegInt(data.wins)
+          && isNonNegInt(data.losses)
+          && isNonNegInt(data.ties)
+          && isNonNegInt(data.rock)
+          && isNonNegInt(data.paper)
+          && isNonNegInt(data.scissors)
+          && !('email' in data);
+    }
+
+    // ── Users ─────────────────────────────────────────────────────────────────
+    // Each document stores { username: string } for one authenticated user.
+
+    match /users/{userId} {
+      allow read:  if request.auth != null && request.auth.uid == userId;
+      allow write: if request.auth != null
+                   && request.auth.uid == userId
+                   && request.resource.data.keys().hasOnly(['username'])
+                   && request.resource.data.username is string
+                   && request.resource.data.username.size() >= 2
+                   && request.resource.data.username.size() <= 24;
+    }
+
+    // ── Leaderboard ───────────────────────────────────────────────────────────
+
+    match /{collection}/{userId} {
+      allow read:  if isLeaderboard(collection);
+      allow write: if isLeaderboard(collection)
+                   && request.auth != null
+                   && request.auth.uid == userId
+                   && isValidEntry(request.resource.data);
+    }
+  }
+}

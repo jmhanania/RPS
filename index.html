@@ -13,18 +13,20 @@
     <div class="card">
       <p class="wordmark">✊🖐️✌️</p>
       <h1>Rock Paper Scissors</h1>
-      <p class="sub" style="text-align:center;margin-top:4px;">Who's playing?</p>
 
-      <div id="profile-list" class="profile-list"></div>
-
-      <div id="profile-divider" class="divider">or create new</div>
-
-      <div class="input-row">
-        <input type="text" id="new-profile-name" placeholder="Your name…" maxlength="24" autocomplete="off">
-        <button id="btn-create-profile" class="btn-primary">Go</button>
+      <!-- Signed-in view -->
+      <div id="auth-profile-display" style="display:none">
+        <p class="sub" style="text-align:center;margin-top:4px;">Welcome back,</p>
+        <p id="auth-handle-display" class="auth-handle"></p>
+        <button id="btn-auth-play" class="btn-primary" style="width:100%;margin-top:16px;">Play →</button>
+        <button id="btn-profile-leaderboard" class="btn-secondary" style="width:100%;margin-top:10px;">🏆 Leaderboard</button>
       </div>
 
-      <button id="btn-profile-leaderboard" class="btn-secondary" style="width:100%;margin-top:12px;">🏆 Leaderboard</button>
+      <!-- Not signed-in view (sign-in button always visible until auth resolves) -->
+      <div class="auth-row">
+        <button id="btn-profile-sign-in"  class="btn-ghost" onclick="signIn()">Sign in with Google</button>
+        <button id="btn-profile-sign-out" class="btn-ghost" onclick="signOut()" style="display:none">Sign out</button>
+      </div>
     </div>
   </div>
 
@@ -66,6 +68,7 @@
 
       <button id="btn-settings-stats"       class="btn-secondary" style="width:100%;margin-bottom:10px;">View My Stats</button>
       <button id="btn-settings-leaderboard" class="btn-secondary" style="width:100%;margin-bottom:10px;">🏆 Leaderboard</button>
+      <button id="btn-change-username" class="btn-secondary" style="width:100%;margin-bottom:10px;display:none" onclick="changeUsername()">Change Username</button>
 
       <div class="btn-row">
         <button id="btn-settings-back" class="btn-secondary">← Back</button>
@@ -133,8 +136,14 @@
           <button id="mop-play-again"      class="btn-primary">Play Again</button>
           <button id="mop-view-stats"      class="btn-secondary">View Stats</button>
           <button id="mop-leaderboard"     class="btn-secondary">🏆 Leaderboard</button>
+          <button id="mop-submit-score"    class="btn-secondary" disabled>Submit Score to Leaderboard</button>
           <button id="mop-change-settings" class="btn-secondary">Change Settings</button>
           <button id="mop-switch-player"   class="btn-secondary">Switch Player</button>
+        </div>
+        <div class="auth-row">
+          <span id="mop-auth-name" class="sub"></span>
+          <button id="mop-sign-in"  class="btn-ghost" onclick="signIn()">Sign in with Google</button>
+          <button id="mop-sign-out" class="btn-ghost" onclick="signOut()" style="display:none">Sign out</button>
         </div>
       </div>
     </div>
@@ -187,8 +196,24 @@
     </div>
   </div>
 
+  <!-- ── Username picker modal ───────────────────────────────────────────── -->
+  <div id="modal-username" class="modal-overlay" style="display:none">
+    <div class="card modal-card">
+      <h2>Pick your RPS Handle</h2>
+      <p class="sub">This is the name that will appear on the leaderboard.</p>
+      <div class="input-row">
+        <input type="text" id="username-input" placeholder="e.g. RockMaster99" maxlength="24" autocomplete="off"
+               onkeydown="if(event.key==='Enter') submitUsername()">
+        <button id="btn-username-submit" class="btn-primary" onclick="submitUsername()">Let's Play</button>
+      </div>
+      <p id="username-error" class="username-error"></p>
+    </div>
+  </div>
+
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
   <script src="js/game.js"></script>
+  <script src="js/auth.js"></script>
 </body>
 </html>
