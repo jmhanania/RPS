@@ -3,10 +3,28 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Play Rock Paper Scissors vs AI — adaptive difficulty, stats, trash talk, and a global leaderboard.">
+  <meta name="theme-color" content="#0d0d1a">
+  <meta property="og:title" content="Rock Paper Scissors">
+  <meta property="og:description" content="Play RPS vs AI with adaptive difficulty, commentary, and a global leaderboard.">
+  <meta property="og:type" content="website">
   <title>Rock Paper Scissors</title>
+  <link rel="manifest" href="manifest.webmanifest">
   <link rel="stylesheet" href="style.css">
+  <link rel="icon" href="icons/rps.svg" type="image/svg+xml">
 </head>
 <body>
+
+  <svg class="svg-sprite" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <symbol id="icon-google" viewBox="0 0 18 18">
+        <path fill="currentColor" d="M17.64 9.2c0-.637-.057-1.252-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908C16.658 14.013 17.64 11.704 17.64 9.2z" opacity=".9"/>
+        <path fill="currentColor" d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.258c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332C2.438 15.983 5.482 18 9 18z" opacity=".75"/>
+        <path fill="currentColor" d="M3.964 10.707c-.18-.54-.282-1.117-.282-1.707s.102-1.167.282-1.707V4.961H.957C.348 6.174 0 7.548 0 9s.348 2.826.957 4.039l3.007-2.332z" opacity=".6"/>
+        <path fill="currentColor" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0 5.482 0 2.438 2.017.957 4.961L3.964 7.293C4.672 5.166 6.656 3.58 9 3.58z" opacity=".85"/>
+      </symbol>
+    </defs>
+  </svg>
 
   <!-- ── Profile selection ─────────────────────────────────────────────── -->
   <div id="screen-profile" class="screen">
@@ -15,8 +33,8 @@
       <h1>Rock Paper Scissors</h1>
 
       <!-- ── Signed-in ─────────────────────────────────── -->
-      <div id="auth-signed-in" style="display:none">
-        <p id="auth-handle-display" class="auth-handle" style="text-align:center;margin-top:16px"></p>
+      <div id="auth-signed-in" class="u-hidden">
+        <p id="auth-handle-display" class="auth-handle auth-handle-profile"></p>
       </div>
 
       <!-- ── Signed-out (shown immediately on load) ────── -->
@@ -24,25 +42,20 @@
         <div class="play-path">
           <h3>Play as Guest</h3>
           <p class="path-note">Stats saved on this device only &mdash; won't appear on the leaderboard</p>
-          <form class="input-row" style="margin-top:10px" autocomplete="off" onsubmit="return false">
+          <form class="input-row input-row-tight" autocomplete="off" onsubmit="return false">
             <input type="text" id="guest-name" placeholder="Your name…" maxlength="24" autocomplete="off">
-            <button id="btn-guest-play" class="btn-primary">Play →</button>
+            <button type="button" id="btn-guest-play" class="btn-primary">Play →</button>
           </form>
         </div>
 
         <div class="divider">or</div>
 
-        <button id="btn-profile-sign-in" class="btn-google" onclick="signIn()">
-          <svg width="18" height="18" viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" fill="currentColor">
-            <path d="M17.64 9.2c0-.637-.057-1.252-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908C16.658 14.013 17.64 11.704 17.64 9.2z" opacity=".9"/>
-            <path d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.258c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332C2.438 15.983 5.482 18 9 18z" opacity=".75"/>
-            <path d="M3.964 10.707c-.18-.54-.282-1.117-.282-1.707s.102-1.167.282-1.707V4.961H.957C.348 6.174 0 7.548 0 9s.348 2.826.957 4.039l3.007-2.332z" opacity=".6"/>
-            <path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0 5.482 0 2.438 2.017.957 4.961L3.964 7.293C4.672 5.166 6.656 3.58 9 3.58z" opacity=".85"/>
-          </svg>
+        <button type="button" id="btn-profile-sign-in" class="btn-google" onclick="signIn()">
+          <svg class="icon-google" width="18" height="18" aria-hidden="true"><use href="#icon-google"/></svg>
           Sign in with Google
         </button>
-        <p class="path-note" style="text-align:center;margin-top:8px">Join the global leaderboard</p>
-        <p id="auth-signin-error" class="username-error" style="text-align:center;margin-top:6px"></p>
+        <p class="path-note path-note-center path-note-tight">Join the global leaderboard</p>
+        <p id="auth-signin-error" class="username-error username-error-center"></p>
       </div>
 
     </div>
@@ -54,8 +67,8 @@
       <p class="wordmark">✊🖐️✌️</p>
       <h1>Rock Paper Scissors</h1>
 
-      <p class="sub" id="settings-greeting" style="text-align:center;margin-top:18px;margin-bottom:4px">Welcome,</p>
-      <p id="settings-profile-name" class="auth-handle" style="margin-bottom:28px"></p>
+      <p class="sub settings-greeting" id="settings-greeting">Welcome,</p>
+      <p id="settings-profile-name" class="auth-handle settings-profile-name"></p>
 
       <div class="setting-block">
         <h3>Match length</h3>
@@ -87,21 +100,16 @@
         </div>
       </div>
 
-      <button id="btn-settings-play"       class="btn-primary"   style="width:100%;margin-bottom:10px;">Play →</button>
-      <button id="btn-settings-stats"       class="btn-secondary" style="width:100%;margin-bottom:10px;">View My Stats</button>
-      <button id="btn-settings-leaderboard" class="btn-secondary" style="width:100%;margin-bottom:10px;display:none">🏆 Leaderboard</button>
-      <button id="btn-change-username"      class="btn-secondary" style="width:100%;margin-bottom:10px;display:none" onclick="changeUsername()">Change Username</button>
-      <button id="btn-settings-signout"     class="btn-ghost"     style="width:100%;margin-bottom:10px;display:none" onclick="signOut()">Sign out</button>
+      <button type="button" id="btn-settings-play"       class="btn-primary btn-block btn-stack">Play →</button>
+      <button type="button" id="btn-settings-stats"       class="btn-secondary btn-block btn-stack">View My Stats</button>
+      <button type="button" id="btn-settings-leaderboard" class="btn-secondary btn-block btn-stack u-hidden">🏆 Leaderboard</button>
+      <button type="button" id="btn-change-username"      class="btn-secondary btn-block btn-stack u-hidden" onclick="changeUsername()">Change Username</button>
+      <button type="button" id="btn-settings-signout"     class="btn-ghost btn-block btn-stack u-hidden" onclick="signOut()">Sign out</button>
 
-      <div id="settings-signin-prompt" style="display:none;border-top:1px solid var(--border);padding-top:16px;margin-top:6px;text-align:center">
-        <p class="path-note" style="margin-bottom:10px">Sign in with Google to appear on the global leaderboard</p>
-        <button class="btn-ghost" style="width:100%;display:flex;align-items:center;justify-content:center;gap:8px;border:1px solid var(--border)" onclick="signIn()">
-          <svg width="14" height="14" viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg" fill="currentColor" aria-hidden="true">
-            <path d="M17.64 9.2c0-.637-.057-1.252-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908C16.658 14.013 17.64 11.704 17.64 9.2z" opacity=".9"/>
-            <path d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.258c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332C2.438 15.983 5.482 18 9 18z" opacity=".75"/>
-            <path d="M3.964 10.707c-.18-.54-.282-1.117-.282-1.707s.102-1.167.282-1.707V4.961H.957C.348 6.174 0 7.548 0 9s.348 2.826.957 4.039l3.007-2.332z" opacity=".6"/>
-            <path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0 5.482 0 2.438 2.017.957 4.961L3.964 7.293C4.672 5.166 6.656 3.58 9 3.58z" opacity=".85"/>
-          </svg>
+      <div id="settings-signin-prompt" class="settings-signin-prompt u-hidden">
+        <p class="path-note path-note-prompt">Sign in with Google to appear on the global leaderboard</p>
+        <button type="button" class="btn-ghost btn-google-inline" onclick="signIn()">
+          <svg class="icon-google-sm" width="14" height="14" aria-hidden="true"><use href="#icon-google"/></svg>
           Sign in with Google
         </button>
       </div>
@@ -112,9 +120,12 @@
   <div id="screen-game" class="screen">
 
     <header class="game-header">
-      <button id="btn-game-stats" class="btn-ghost" title="Home">🏠</button>
-      <span   id="match-label"    class="match-label"></span>
-      <button id="btn-end-game"   class="btn-ghost end-game-btn" title="End Game">End Game</button>
+      <button type="button" id="btn-game-stats" class="btn-ghost" title="Home" aria-label="Home">🏠</button>
+      <div class="match-label-wrap">
+        <span id="match-label" class="match-label"></span>
+        <span id="match-sublabel" class="match-sublabel"></span>
+      </div>
+      <button type="button" id="btn-end-game"   class="btn-ghost end-game-btn" title="End Game">End Game</button>
     </header>
 
     <!-- Scoreboard -->
@@ -132,7 +143,7 @@
 
     <!-- Result area -->
     <div id="result-area" class="result-area idle">
-      <div id="result-row" class="result-row" style="display:none">
+      <div id="result-row" class="result-row u-hidden">
         <div class="choice-display">
           <span id="player-choice-display"   class="choice-emoji"></span>
           <span class="choice-sub">You</span>
@@ -143,32 +154,34 @@
           <span class="choice-sub">Computer</span>
         </div>
       </div>
-      <p id="idle-prompt" class="idle-prompt">Make your move ↓</p>
-      <div id="debug-info" class="debug-info" style="display:none"></div>
+      <p id="idle-prompt" class="idle-prompt">Make your move ↓ <span class="idle-keys">(R · P · S or 1 · 2 · 3)</span></p>
+      <div id="debug-info" class="debug-info u-hidden"></div>
     </div>
 
     <!-- Choice buttons -->
     <div id="choices-row" class="choices-row">
-      <button class="choice-btn" data-move="rock">✊<span>Rock</span></button>
-      <button class="choice-btn" data-move="paper">🖐️<span>Paper</span></button>
-      <button class="choice-btn" data-move="scissors">✌️<span>Scissors</span></button>
+      <button type="button" class="choice-btn" data-move="rock">✊<span>Rock</span></button>
+      <button type="button" class="choice-btn" data-move="paper">🖐️<span>Paper</span></button>
+      <button type="button" class="choice-btn" data-move="scissors">✌️<span>Scissors</span></button>
     </div>
 
     <!-- Round pip history -->
     <div id="round-history" class="round-history"></div>
 
     <!-- Match-over panel (replaces choice buttons when match ends) -->
-    <div id="match-over-panel" style="display:none; width:100%">
+    <div id="match-over-panel" class="match-over-wrap u-hidden">
       <div class="card mop-card">
         <div id="mop-icon"     class="match-over-icon"></div>
-        <h2  id="mop-title"   style="text-align:center"></h2>
+        <h2  id="mop-title"   class="mop-title"></h2>
         <p   id="mop-subtitle" class="mop-subtitle"></p>
+        <p   id="mop-extra"    class="mop-extra u-hidden"></p>
         <div class="btn-col">
-          <button id="mop-play-again"      class="btn-primary">Play Again</button>
-          <button id="mop-view-stats"      class="btn-secondary">View Stats</button>
-          <button id="mop-leaderboard"     class="btn-secondary" style="display:none">🏆 Leaderboard</button>
-          <button id="mop-change-settings" class="btn-secondary">Change Settings</button>
-          <button id="mop-signout"         class="btn-ghost" style="display:none" onclick="signOut()">Sign out</button>
+          <button type="button" id="mop-copy-score"    class="btn-secondary">Copy score</button>
+          <button type="button" id="mop-play-again"      class="btn-primary">Play Again</button>
+          <button type="button" id="mop-view-stats"      class="btn-secondary">View Stats</button>
+          <button type="button" id="mop-leaderboard"     class="btn-secondary u-hidden">🏆 Leaderboard</button>
+          <button type="button" id="mop-change-settings" class="btn-secondary">Change Settings</button>
+          <button type="button" id="mop-signout"         class="btn-ghost u-hidden" onclick="signOut()">Sign out</button>
         </div>
       </div>
     </div>
@@ -196,8 +209,8 @@
         <table id="stats-order1" class="stats-table"></table>
       </div>
 
-      <button id="btn-stats-back" class="btn-primary">← Back</button>
-      <button id="btn-stats-signout" class="btn-ghost" style="width:100%;margin-top:10px;display:none" onclick="signOut()">Sign out</button>
+      <button type="button" id="btn-stats-back" class="btn-primary">← Back</button>
+      <button type="button" id="btn-stats-signout" class="btn-ghost btn-block btn-signout-footer u-hidden" onclick="signOut()">Sign out</button>
     </div>
   </div>
 
@@ -205,38 +218,40 @@
   <div id="screen-leaderboard" class="screen">
     <div class="card stats-card">
       <h2>🏆 Leaderboard</h2>
-      <p class="sub">Top 20 players · updated after each match</p>
+      <p class="sub">Top 20 players · scores sync after each signed-in match · <span class="sub-hint">Age</span> ≈ last server update</p>
 
       <div id="lb-tabs" class="lb-tabs"></div>
 
-      <table class="stats-table lb-table">
+      <table id="lb-table" class="stats-table lb-table">
         <thead id="lb-head"></thead>
         <tbody id="lb-body">
-          <tr><td colspan="9" class="lb-loading">Loading…</td></tr>
+          <tr><td colspan="10" class="lb-loading">Loading…</td></tr>
         </tbody>
       </table>
 
-      <div style="margin-top:22px">
-        <button id="btn-lb-back" class="btn-primary">← Back</button>
-        <button id="btn-lb-signout" class="btn-ghost" style="width:100%;margin-top:10px;display:none" onclick="signOut()">Sign out</button>
+      <div class="lb-footer-actions">
+        <button type="button" id="btn-lb-back" class="btn-primary">← Back</button>
+        <button type="button" id="btn-lb-signout" class="btn-ghost btn-block btn-signout-footer u-hidden" onclick="signOut()">Sign out</button>
       </div>
     </div>
   </div>
 
   <!-- ── Username picker modal ───────────────────────────────────────────── -->
-  <div id="modal-username" class="modal-overlay" style="display:none">
+  <div id="modal-username" class="modal-overlay u-hidden">
     <div class="card modal-card">
-      <button class="modal-close-btn" onclick="cancelUsername()" title="Cancel">✕</button>
+      <button type="button" class="modal-close-btn" onclick="cancelUsername()" title="Cancel" aria-label="Cancel">✕</button>
       <h2>Pick your RPS Handle</h2>
       <p class="sub">This is the name that will appear on the leaderboard.</p>
       <form class="input-row" autocomplete="off" onsubmit="return false">
         <input type="text" id="username-input" placeholder="e.g. RockMaster99" maxlength="24" autocomplete="off"
                onkeydown="if(event.key==='Enter') submitUsername()">
-        <button id="btn-username-submit" class="btn-primary" onclick="submitUsername()">Let's Play</button>
+        <button type="button" id="btn-username-submit" class="btn-primary" onclick="submitUsername()">Let's Play</button>
       </form>
       <p id="username-error" class="username-error"></p>
     </div>
   </div>
+
+  <div id="app-toast" class="app-toast u-hidden" role="status" aria-live="polite"></div>
 
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>

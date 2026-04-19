@@ -68,6 +68,79 @@ function formatPct(wins, played) {
   return v >= 1 ? '1.000' : '.' + v.toFixed(3).slice(2);
 }
 
+function escapeHtml(s) {
+  return String(s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+function formatRelativeTime(ts) {
+  let d = null;
+  if (ts && typeof ts.toDate === 'function') d = ts.toDate();
+  else if (ts instanceof Date) d = ts;
+  if (!d || isNaN(d.getTime())) return '—';
+  const sec = Math.floor((Date.now() - d.getTime()) / 1000);
+  if (sec < 45) return 'now';
+  if (sec < 3600) return Math.floor(sec / 60) + 'm';
+  if (sec < 86400) return Math.floor(sec / 3600) + 'h';
+  if (sec < 604800) return Math.floor(sec / 86400) + 'd';
+  return Math.floor(sec / 604800) + 'w+';
+}
+
+let audioCtx = null;
+function ensureAudio() {
+  if (!audioCtx) {
+    try {
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    } catch (_) {}
+  }
+  return audioCtx;
+}
+
+function playRoundFeedback(outcome) {
+  if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const ctx = ensureAudio();
+  if (!ctx) return;
+  if (ctx.state === 'suspended') ctx.resume().catch(function() {});
+  const osc = ctx.createOscillator();
+  const g = ctx.createGain();
+  osc.connect(g);
+  g.connect(ctx.destination);
+  const freq = outcome === 'win' ? 523.25 : outcome === 'loss' ? 185 : 330;
+  osc.frequency.value = freq;
+  osc.type = 'sine';
+  const t0 = ctx.currentTime;
+  g.gain.setValueAtTime(0.07, t0);
+  g.gain.exponentialRampToValueAtTime(0.001, t0 + 0.11);
+  osc.start(t0);
+  osc.stop(t0 + 0.12);
+}
+
+function hapticForOutcome(outcome) {
+  if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  try {
+    if (navigator.vibrate) {
+      if (outcome === 'win') navigator.vibrate([22, 38, 22]);
+      else if (outcome === 'loss') navigator.vibrate(65);
+      else navigator.vibrate(16);
+    }
+  } catch (_) {}
+}
+
+let toastTimer = null;
+function showToast(msg) {
+  const el = $('app-toast');
+  if (!el) return;
+  el.textContent = msg;
+  el.classList.remove('u-hidden');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(function() {
+    el.classList.add('u-hidden');
+  }, 4200);
+}
+
 function lbSortValue(d, field) {
   const played = (d.wins || 0) + (d.losses || 0) + (d.ties || 0);
   const moves  = (d.rock || 0) + (d.paper || 0) + (d.scissors || 0);
@@ -87,7 +160,7 @@ function syncToLeaderboard(uid, playerName, stats) {
   const bd = stats.by_difficulty || {};
   const writes = [];
   let totalWins = 0, totalLosses = 0, totalTies = 0;
-  for (var d = 1; d <= 4; d++) {
+  for (let d = 1; d <= 4; d++) {
     const r = bd[d] || { wins: 0, losses: 0, ties: 0 };
     totalWins   += r.wins;
     totalLosses += r.losses;
@@ -121,23 +194,14 @@ function syncToLeaderboard(uid, playerName, stats) {
 
 function renderLeaderboardScreen() {
   $('lb-tabs').innerHTML = [0, 1, 2, 3, 4].map(function(d) {
-    return '<button class="lb-tab' + (d === currentLbDiff ? ' active' : '') + '" data-diff="' + d + '">'
+    return '<button type="button" class="lb-tab' + (d === currentLbDiff ? ' active' : '') + '" data-diff="' + d + '">'
       + LB_DIFF_NAMES[d] + '</button>';
   }).join('');
-  $('lb-tabs').querySelectorAll('.lb-tab').forEach(function(btn) {
-    btn.addEventListener('click', function() {
-      currentLbDiff = parseInt(btn.dataset.diff, 10);
-      $('lb-tabs').querySelectorAll('.lb-tab').forEach(function(b) {
-        b.classList.toggle('active', parseInt(b.dataset.diff, 10) === currentLbDiff);
-      });
-      fetchAndRenderLeaderboard();
-    });
-  });
   fetchAndRenderLeaderboard();
 }
 
 function fetchAndRenderLeaderboard() {
-  const N = LB_COLS.length + 2;
+  const N = LB_COLS.length + 3;
   const thead = $('lb-head');
   const tbody = $('lb-body');
 
@@ -148,18 +212,11 @@ function fetchAndRenderLeaderboard() {
         return '<th class="lb-sort-th' + (active ? ' lb-sort-active' : '') + '" data-sort="' + c.key + '">'
           + c.label + arrow + '</th>';
       }).join('')
-    + '</tr>';
-  thead.querySelectorAll('.lb-sort-th').forEach(function(th) {
-    th.addEventListener('click', function() {
-      const f = th.dataset.sort;
-      currentLbSort = { field: f, dir: currentLbSort.field === f && currentLbSort.dir === 'desc' ? 'asc' : 'desc' };
-      fetchAndRenderLeaderboard();
-    });
-  });
+    + '<th class="lb-age-h" title="Approximate time since last score sync">Age</th></tr>';
 
   tbody.innerHTML = '<tr><td colspan="' + N + '" class="lb-loading">Loading…</td></tr>';
   if (!db) {
-    tbody.innerHTML = '<tr><td colspan="' + N + '" class="lb-loading" style="color:var(--loss)">Leaderboard unavailable.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="' + N + '" class="lb-loading lb-unavailable">Leaderboard unavailable.</td></tr>';
     return;
   }
   db.collection('v2_leaderboard_' + currentLbDiff).orderBy('wins', 'desc').limit(100).get()
@@ -183,22 +240,48 @@ function fetchAndRenderLeaderboard() {
           return v >= 1 ? '1.000' : '.' + v.toFixed(3).slice(2);
         };
         const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : (i + 1);
+        const name = escapeHtml(d.name != null && d.name !== '' ? d.name : '?');
+        const age = formatRelativeTime(d.updatedAt);
         return '<tr>'
           + '<td class="lb-rank">'  + medal + '</td>'
-          + '<td class="lb-name">'  + (d.name || '?') + '</td>'
-          + '<td style="color:var(--win)">'  + (d.wins   || 0) + '</td>'
-          + '<td style="color:var(--loss)">' + (d.losses || 0) + '</td>'
-          + '<td style="color:var(--tie)">'  + (d.ties   || 0) + '</td>'
+          + '<td class="lb-name">'  + name + '</td>'
+          + '<td class="lb-num lb-num-w">'  + (d.wins   || 0) + '</td>'
+          + '<td class="lb-num lb-num-l">' + (d.losses || 0) + '</td>'
+          + '<td class="lb-num lb-num-t">'  + (d.ties   || 0) + '</td>'
           + '<td>' + formatPct(d.wins || 0, played) + '</td>'
           + '<td class="lb-move-col">' + mp(d.rock)     + '</td>'
           + '<td class="lb-move-col">' + mp(d.paper)    + '</td>'
           + '<td class="lb-move-col">' + mp(d.scissors) + '</td>'
+          + '<td class="lb-age">' + age + '</td>'
           + '</tr>';
       }).join('');
     })
     .catch(function() {
       tbody.innerHTML = '<tr><td colspan="' + N + '" class="lb-loading">No scores yet — be the first to claim the throne! 👑</td></tr>';
     });
+}
+
+function initLeaderboardUI() {
+  const tabs = $('lb-tabs');
+  const thead = $('lb-head');
+  if (!tabs || !thead) return;
+  tabs.addEventListener('click', function(e) {
+    const btn = e.target.closest('.lb-tab');
+    if (!btn || !tabs.contains(btn)) return;
+    currentLbDiff = parseInt(btn.dataset.diff, 10);
+    tabs.querySelectorAll('.lb-tab').forEach(function(b) {
+      b.classList.toggle('active', parseInt(b.dataset.diff, 10) === currentLbDiff);
+    });
+    fetchAndRenderLeaderboard();
+  });
+  thead.addEventListener('click', function(e) {
+    const th = e.target.closest('.lb-sort-th');
+    if (!th || !thead.contains(th)) return;
+    const f = th.dataset.sort;
+    if (!f) return;
+    currentLbSort = { field: f, dir: currentLbSort.field === f && currentLbSort.dir === 'desc' ? 'asc' : 'desc' };
+    fetchAndRenderLeaderboard();
+  });
 }
 
 // ============================================================
@@ -259,6 +342,7 @@ function counterOf(move) {
   for (const [k, v] of Object.entries(BEATS)) {
     if (v === move) return k;
   }
+  return CHOICES[Math.floor(Math.random() * CHOICES.length)];
 }
 
 function topWithSupport(counts) {
@@ -572,8 +656,20 @@ const TRASH_TALK = {
 };
 
 function pickTrashTalk(outcome) {
-  var lines = TRASH_TALK[outcome];
-  return lines[Math.floor(Math.random() * lines.length)];
+  const lines = TRASH_TALK[outcome];
+  if (!match.trashUsed) match.trashUsed = { win: [], loss: [], tie: [] };
+  let used = match.trashUsed[outcome];
+  let pool = lines.filter(function(line) {
+    return used.indexOf(line) === -1;
+  });
+  if (!pool.length) {
+    match.trashUsed[outcome] = [];
+    used = match.trashUsed[outcome];
+    pool = lines.slice();
+  }
+  const line = pool[Math.floor(Math.random() * pool.length)];
+  used.push(line);
+  return line;
 }
 
 // ============================================================
@@ -592,6 +688,7 @@ const match = {
   playerScore: 0, computerScore: 0,
   bestOf: 5, winsNeeded: 3, difficulty: 4, commentary: 'off',
   statsReturn: null, lbReturn: null,
+  winStreak: 0, maxWinStreak: 0, trashUsed: null,
 };
 
 function activeStats()  { return store.stats.profiles[match.player];  }
@@ -600,7 +697,7 @@ function activeConfig() { return store.config.profiles[match.player]; }
 // ── Profile screen ──────────────────────────────────────────
 function renderProfileScreen() {
   // auth.js manages signed-in/signed-out display; just clear the guest input
-  var guestInput = $('guest-name');
+  const guestInput = $('guest-name');
   if (guestInput) guestInput.value = '';
 }
 
@@ -624,21 +721,24 @@ $('guest-name').addEventListener('keydown', function(e) {
 
 // ── Settings screen ─────────────────────────────────────────
 function renderSettingsScreen() {
-  var isSignedIn = (typeof currentUser !== 'undefined' && currentUser &&
+  const isSignedIn = (typeof currentUser !== 'undefined' && currentUser &&
                     typeof currentUsername !== 'undefined' && currentUsername);
-  var greetEl = $('settings-greeting');
+  const greetEl = $('settings-greeting');
   if (greetEl) greetEl.textContent = isSignedIn ? 'Welcome back,' : 'Welcome,';
   $('settings-profile-name').textContent = match.player;
-  var promptEl = $('settings-signin-prompt');
-  if (promptEl) promptEl.style.display = (typeof currentUser !== 'undefined' && currentUser) ? 'none' : '';
+  const promptEl = $('settings-signin-prompt');
+  if (promptEl) {
+    if (typeof currentUser !== 'undefined' && currentUser) promptEl.classList.add('u-hidden');
+    else promptEl.classList.remove('u-hidden');
+  }
   const cfg   = activeConfig();
   const boEl  = document.querySelector('input[name="best_of"][value="' + cfg.best_of + '"]');
   const dEl   = document.querySelector('input[name="difficulty"][value="' + cfg.difficulty + '"]');
   if (boEl) boEl.checked = true;
   if (dEl)  dEl.checked  = true;
   // migrate old boolean debug field to commentary string
-  var commentary = cfg.commentary || (cfg.debug ? 'analysis' : 'off');
-  var cEl = document.querySelector('input[name="commentary"][value="' + commentary + '"]');
+  const commentary = cfg.commentary || (cfg.debug ? 'analysis' : 'off');
+  const cEl = document.querySelector('input[name="commentary"][value="' + commentary + '"]');
   if (cEl) cEl.checked = true;
 }
 
@@ -649,7 +749,7 @@ $('btn-settings-play').addEventListener('click', function() {
   const dEl     = document.querySelector('input[name="difficulty"]:checked');
   if (boEl) cfg.best_of   = parseInt(boEl.value, 10);
   if (dEl)  cfg.difficulty = parseInt(dEl.value,  10);
-  var cChecked = document.querySelector('input[name="commentary"]:checked');
+  const cChecked = document.querySelector('input[name="commentary"]:checked');
   if (cChecked) cfg.commentary = cChecked.value;
   saveAll();
   startMatch();
@@ -680,22 +780,31 @@ function startMatch() {
   match.roundHistory  = [];
   match.playerScore   = 0;
   match.computerScore = 0;
+  match.winStreak     = 0;
+  match.maxWinStreak  = 0;
+  match.trashUsed     = { win: [], loss: [], tie: [] };
 
   $('player-name-display').textContent  = match.player;
   $('match-label').textContent          = cfg.best_of === 0 ? 'Infinite' : 'Best of ' + match.bestOf;
+  const sub = $('match-sublabel');
+  if (sub) {
+    sub.textContent = cfg.best_of === 0
+      ? 'Session score · career totals stay in Stats'
+      : '';
+  }
   $('player-score').textContent         = '0';
   $('computer-score').textContent       = '0';
   $('result-area').className            = 'result-area idle';
-  $('result-row').style.display         = 'none';
-  $('idle-prompt').style.display        = 'block';
+  $('result-row').classList.add('u-hidden');
+  $('idle-prompt').classList.remove('u-hidden');
   $('round-history').innerHTML          = '';
-  $('debug-info').style.display         = 'none';
+  $('debug-info').classList.add('u-hidden');
 
   // Hide match-over panel, show choice buttons and End Game CTA
-  $('match-over-panel').style.display = 'none';
-  $('choices-row').style.display      = '';
-  $('round-history').style.display    = '';
-  $('btn-end-game').style.display     = '';
+  $('match-over-panel').classList.add('u-hidden');
+  $('choices-row').classList.remove('u-hidden');
+  $('round-history').classList.remove('u-hidden');
+  $('btn-end-game').classList.remove('u-hidden');
 
   setChoicesDisabled(false);
   show('screen-game');
@@ -721,6 +830,16 @@ function playRound(playerMove) {
   if (outcome === 'win')  match.playerScore++;
   if (outcome === 'loss') match.computerScore++;
 
+  if (outcome === 'win') {
+    match.winStreak++;
+    if (match.winStreak > match.maxWinStreak) match.maxWinStreak = match.winStreak;
+  } else if (outcome === 'loss') {
+    match.winStreak = 0;
+  }
+
+  playRoundFeedback(outcome);
+  hapticForOutcome(outcome);
+
   const prev  = match.history.length >= 1 ? match.history[match.history.length - 1] : null;
   const prev2 = match.history.length >= 2 ? match.history[match.history.length - 2] : null;
   match.history.push(playerMove);
@@ -743,8 +862,8 @@ function playRound(playerMove) {
 
 function renderRoundResult(playerMove, computerMove, outcome, reason) {
   $('result-area').className = 'result-area ' + outcome;
-  $('idle-prompt').style.display = 'none';
-  $('result-row').style.display  = 'flex';
+  $('idle-prompt').classList.add('u-hidden');
+  $('result-row').classList.remove('u-hidden');
 
   $('player-choice-display').textContent   = EMOJI[playerMove];
   $('computer-choice-display').textContent = EMOJI[computerMove];
@@ -761,13 +880,13 @@ function renderRoundResult(playerMove, computerMove, outcome, reason) {
   });
 
   if (match.commentary === 'analysis') {
-    $('debug-info').style.display = 'block';
+    $('debug-info').classList.remove('u-hidden');
     $('debug-info').textContent   = 'AI reasoning: ' + reason;
   } else if (match.commentary === 'trash') {
-    $('debug-info').style.display = 'block';
+    $('debug-info').classList.remove('u-hidden');
     $('debug-info').textContent   = pickTrashTalk(outcome);
   } else {
-    $('debug-info').style.display = 'none';
+    $('debug-info').classList.add('u-hidden');
   }
 }
 
@@ -820,6 +939,24 @@ function endMatch() {
   $('mop-title').textContent    = won ? 'You Won!' : tied ? "It's a Tie!" : 'Computer Wins';
   $('mop-subtitle').textContent = contextText;
 
+  const extra = $('mop-extra');
+  if (extra) {
+    const parts = [];
+    if (match.maxWinStreak >= 2) {
+      parts.push('Best win streak this match: ' + match.maxWinStreak + ' 🔥');
+    }
+    if (match.bestOf === 0) {
+      parts.push('Infinite = session scoring only — Stats keeps your all-time record.');
+    }
+    if (parts.length) {
+      extra.textContent = parts.join(' ');
+      extra.classList.remove('u-hidden');
+    } else {
+      extra.textContent = '';
+      extra.classList.add('u-hidden');
+    }
+  }
+
   // Record match result by difficulty (only if at least one round played)
   if (match.roundHistory.length > 0) {
     const stats = activeStats();
@@ -833,15 +970,18 @@ function endMatch() {
     else stats.by_difficulty[d].losses++;
     saveAll();
     if (currentUser && currentUsername) {
-      syncToLeaderboard(currentUser.uid, currentUsername, activeStats());
+      syncToLeaderboard(currentUser.uid, currentUsername, activeStats()).catch(function(err) {
+        console.warn('Leaderboard sync failed:', err && err.message ? err.message : err);
+        showToast('Couldn’t sync to the leaderboard — we’ll retry after your next match.');
+      });
     }
   }
 
   // Swap choice buttons for the panel, hide End Game CTA
-  $('choices-row').style.display      = 'none';
-  $('round-history').style.display    = 'none';
-  $('match-over-panel').style.display = 'block';
-  $('btn-end-game').style.display     = 'none';
+  $('choices-row').classList.add('u-hidden');
+  $('round-history').classList.add('u-hidden');
+  $('match-over-panel').classList.remove('u-hidden');
+  $('btn-end-game').classList.add('u-hidden');
 }
 
 $('mop-play-again').addEventListener('click', startMatch);
@@ -859,6 +999,42 @@ $('mop-leaderboard').addEventListener('click', function() {
 $('mop-change-settings').addEventListener('click', function() {
   renderSettingsScreen();
   show('screen-settings');
+});
+
+$('mop-copy-score').addEventListener('click', function() {
+  const won  = match.playerScore > match.computerScore;
+  const tied = match.playerScore === match.computerScore;
+  const resultLabel = won ? 'I won' : tied ? 'Tied' : 'Computer won';
+  const line = [
+    'Rock Paper Scissors — ' + resultLabel,
+    match.playerScore + '–' + match.computerScore + (match.bestOf === 0 ? ' (infinite session)' : ' (best of ' + match.bestOf + ')'),
+    match.player ? 'Player: ' + match.player : '',
+  ].filter(Boolean).join('\n');
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(line).then(function() {
+      showToast('Score copied to clipboard');
+    }).catch(function() {
+      showToast('Could not copy — select and copy manually');
+    });
+  } else {
+    showToast('Clipboard not available in this browser');
+  }
+});
+
+document.addEventListener('keydown', function(e) {
+  if (!document.getElementById('screen-game').classList.contains('active')) return;
+  const target = e.target;
+  if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable)) return;
+  const first = document.querySelector('.choice-btn');
+  if (!first || first.disabled) return;
+  const k = e.key.toLowerCase();
+  let move = null;
+  if (k === 'r' || e.key === '1') move = 'rock';
+  else if (k === 'p' || e.key === '2') move = 'paper';
+  else if (k === 's' || e.key === '3') move = 'scissors';
+  if (!move) return;
+  e.preventDefault();
+  playRound(move);
 });
 
 // ── Stats screen ─────────────────────────────────────────────
@@ -881,16 +1057,16 @@ function renderStatsScreen() {
   const diffNames = { 1: 'Random', 2: 'Adaptive', 3: 'Tricky', 4: 'Markov' };
   const byDiff = stats.by_difficulty || {};
   $('stats-diff').innerHTML =
-    '<thead><tr><th style="text-align:left">Difficulty</th><th>W</th><th>L</th><th>T</th><th>Win %</th></tr></thead><tbody>'
+    '<thead><tr><th class="th-left">Difficulty</th><th>W</th><th>L</th><th>T</th><th>Win %</th></tr></thead><tbody>'
     + [1, 2, 3, 4].map(function(d) {
         const r = byDiff[d] || { wins: 0, losses: 0, ties: 0 };
         const played = r.wins + r.losses + r.ties;
         const pct = played > 0 ? Math.round(r.wins / played * 100) + '%' : '—';
         return '<tr>'
-          + '<td style="text-align:left">' + d + ' – ' + diffNames[d] + '</td>'
-          + '<td style="color:var(--win)">'  + r.wins   + '</td>'
-          + '<td style="color:var(--loss)">' + r.losses + '</td>'
-          + '<td style="color:var(--tie)">'  + r.ties   + '</td>'
+          + '<td class="td-left">' + d + ' – ' + diffNames[d] + '</td>'
+          + '<td class="stat-w">'  + r.wins   + '</td>'
+          + '<td class="stat-l">' + r.losses + '</td>'
+          + '<td class="stat-t">'  + r.ties   + '</td>'
           + '<td>' + pct + '</td>'
           + '</tr>';
       }).join('')
@@ -925,6 +1101,13 @@ window.goToSettings = function(name) {
   }
 };
 
+initLeaderboardUI();
 loadAll();
 renderProfileScreen();
 show('screen-profile');
+
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function() {
+    navigator.serviceWorker.register('sw.js').catch(function() {});
+  });
+}

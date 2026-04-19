@@ -69,14 +69,14 @@ var currentUsername = null;   // Chosen RPS handle (accessible from game.js)
     document.getElementById('btn-username-submit').disabled   = false;
     document.getElementById('btn-username-submit').textContent = "Let's Play";
     input.value = '';
-    modal.style.display = 'flex';
+    modal.classList.remove('u-hidden');
     setTimeout(function () { input.focus(); }, 50);
   }
 
   window.changeUsername = showUsernameModal;
 
   window.cancelUsername = function () {
-    document.getElementById('modal-username').style.display = 'none';
+    document.getElementById('modal-username').classList.add('u-hidden');
     if (!currentUsername) {
       firebase.auth().signOut();
     }
@@ -117,7 +117,7 @@ var currentUsername = null;   // Chosen RPS handle (accessible from game.js)
     })
       .then(function () {
         currentUsername = handle;
-        document.getElementById('modal-username').style.display = 'none';
+        document.getElementById('modal-username').classList.add('u-hidden');
         updateAuthUI();
         if (window.goToSettings) window.goToSettings(currentUsername);
       })
@@ -157,7 +157,9 @@ var currentUsername = null;   // Chosen RPS handle (accessible from game.js)
 
   function setDisplay(id, val) {
     var el = document.getElementById(id);
-    if (el) el.style.display = val;
+    if (!el) return;
+    if (val === 'none') el.classList.add('u-hidden');
+    else el.classList.remove('u-hidden');
   }
 
   function setText(id, val) {

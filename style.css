@@ -1,6 +1,22 @@
 /* ── Reset & tokens ───────────────────────────────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
+.u-hidden {
+  display: none !important;
+}
+
+.svg-sprite {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+}
+
+.icon-google,
+.icon-google-sm {
+  flex-shrink: 0;
+}
+
 :root {
   --bg:           #0d0d1a;
   --surface:      #16162a;
@@ -11,7 +27,7 @@
   --accent-glow:  rgba(124, 58, 237, 0.35);
   --accent-light: #a78bfa;
   --text:         #f0f0ff;
-  --muted:        #8888aa;
+  --muted:        #9595b8;
   --win:          #10b981;
   --loss:         #ef4444;
   --tie:          #f59e0b;
@@ -26,6 +42,16 @@ body {
   min-height: 100dvh;
   display: flex;
   justify-content: center;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
 
 /* ── Screens ──────────────────────────────────────────────────────────────── */
@@ -86,6 +112,22 @@ h3 { font-size: 0.8rem; font-weight: 600; color: var(--muted); text-transform: u
 }
 .btn-primary:hover  { opacity: .88; transform: translateY(-1px); }
 .btn-primary:active { transform: translateY(0); opacity: 1; }
+
+.btn-primary:focus-visible,
+.btn-secondary:focus-visible,
+.btn-ghost:focus-visible,
+.choice-btn:focus-visible,
+.radio-pill:focus-within,
+.lb-tab:focus-visible,
+.modal-close-btn:focus-visible {
+  outline: 2px solid var(--accent-light);
+  outline-offset: 2px;
+}
+
+input[type="text"]:focus-visible {
+  outline: 2px solid var(--accent-light);
+  outline-offset: 0;
+}
 
 .btn-secondary {
   background: var(--surface2);
@@ -169,6 +211,11 @@ h3 { font-size: 0.8rem; font-weight: 600; color: var(--muted); text-transform: u
 }
 
 .input-row { display: flex; gap: 8px; }
+.input-row-tight { margin-top: 10px; }
+
+.btn-block { width: 100%; }
+.btn-stack { margin-bottom: 10px; }
+.btn-signout-footer { margin-top: 10px; }
 input[type="text"] {
   flex: 1;
   padding: 12px 14px;
@@ -242,13 +289,32 @@ input[type="checkbox"] { accent-color: var(--accent); width: 15px; height: 15px;
   margin-bottom: 20px;
 }
 .game-header .btn-ghost:last-child { margin-left: auto; }
-.match-label {
+.match-label-wrap {
   flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+.match-label {
   text-align: center;
   font-size: 0.8rem;
   color: var(--muted);
   text-transform: uppercase;
   letter-spacing: .06em;
+}
+.match-sublabel {
+  font-size: 0.65rem;
+  color: var(--muted);
+  text-align: center;
+  margin-top: 3px;
+  line-height: 1.35;
+  max-width: 240px;
+}
+.idle-keys {
+  font-size: 0.72rem;
+  font-weight: 500;
 }
 
 /* Score board */
@@ -331,6 +397,9 @@ input[type="checkbox"] { accent-color: var(--accent); width: 15px; height: 15px;
   font-size: 0.9rem;
   color: var(--muted);
   margin: auto;
+  text-align: center;
+  max-width: 100%;
+  line-height: 1.45;
 }
 
 .debug-info {
@@ -469,6 +538,38 @@ input[type="checkbox"] { accent-color: var(--accent); width: 15px; height: 15px;
   margin-top: 4px;
   line-height: 1.4;
 }
+.path-note-center { text-align: center; }
+.path-note-tight { margin-top: 8px; }
+.path-note-prompt { margin-bottom: 10px; }
+
+.username-error-center { text-align: center; margin-top: 6px; }
+
+.settings-greeting {
+  text-align: center;
+  margin-top: 18px;
+  margin-bottom: 4px;
+}
+.settings-profile-name { margin-bottom: 28px; }
+
+.settings-signin-prompt {
+  border-top: 1px solid var(--border);
+  padding-top: 16px;
+  margin-top: 6px;
+  text-align: center;
+}
+.btn-google-inline {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 1px solid var(--border);
+}
+
+.auth-handle-profile {
+  text-align: center;
+  margin-top: 16px;
+}
 
 /* ── Google sign-in button ───────────────────────────────────────────────── */
 .btn-google {
@@ -506,12 +607,39 @@ input[type="checkbox"] { accent-color: var(--accent); width: 15px; height: 15px;
 }
 
 /* ── Match-over panel (in-game) ───────────────────────────────────────────── */
+.match-over-wrap { width: 100%; }
 .mop-card    { margin-top: 8px; }
+.mop-title { text-align: center; }
 .mop-subtitle { text-align: center; color: var(--muted); margin-top: 4px; font-size: 0.9rem; }
+.mop-extra {
+  text-align: center;
+  color: var(--muted);
+  font-size: 0.82rem;
+  line-height: 1.45;
+  margin: 10px 0 4px;
+  padding: 0 4px;
+}
+
+.app-toast {
+  position: fixed;
+  bottom: 28px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 400;
+  max-width: min(420px, calc(100vw - 32px));
+  padding: 12px 16px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  color: var(--text);
+  font-size: 0.88rem;
+  line-height: 1.4;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
+  text-align: center;
+}
 .match-over-icon { font-size: 4.5rem; text-align: center; margin-bottom: 8px; }
 
 /* ── Stats screen ─────────────────────────────────────────────────────────── */
-#screen-stats { }
 .stats-card { max-height: 92dvh; overflow-y: auto; }
 
 .stats-section { margin-bottom: 24px; }
@@ -539,6 +667,11 @@ input[type="checkbox"] { accent-color: var(--accent); width: 15px; height: 15px;
 }
 .stats-table thead th { color: var(--muted); font-weight: 500; background: var(--surface2); }
 .stats-table tbody th { font-weight: 600; color: var(--muted); background: var(--surface2); text-align: left; }
+.stats-table .th-left,
+.stats-table .td-left { text-align: left; }
+.stats-table .stat-w { color: var(--win); }
+.stats-table .stat-l { color: var(--loss); }
+.stats-table .stat-t { color: var(--tie); }
 
 /* ── Leaderboard ──────────────────────────────────────────────────────────── */
 #screen-leaderboard { max-width: 640px; }
@@ -556,7 +689,26 @@ input[type="checkbox"] { accent-color: var(--accent); width: 15px; height: 15px;
 .lb-tab:hover  { color: var(--text); border-color: var(--accent-light); }
 .lb-tab.active { background: rgba(124,58,237,.2); border-color: var(--accent); color: var(--accent-light); }
 .lb-table    { font-size: 0.78rem; }
+.sub-hint { font-weight: 600; color: var(--accent-light); }
+
 .lb-loading  { text-align: center; color: var(--muted); padding: 24px; }
+.lb-unavailable { color: var(--loss); }
+.lb-num-w { color: var(--win); }
+.lb-num-l { color: var(--loss); }
+.lb-num-t { color: var(--tie); }
+.lb-age-h {
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: var(--muted);
+  white-space: nowrap;
+}
+.lb-age {
+  font-size: 0.72rem;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.lb-footer-actions { margin-top: 22px; }
 .lb-rank-h   { width: 28px; }
 .lb-rank     { font-size: 0.9rem; }
 .lb-name-h   { text-align: left !important; min-width: 60px; }
