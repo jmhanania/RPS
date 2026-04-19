@@ -1001,26 +1001,6 @@ $('mop-change-settings').addEventListener('click', function() {
   show('screen-settings');
 });
 
-$('mop-copy-score').addEventListener('click', function() {
-  const won  = match.playerScore > match.computerScore;
-  const tied = match.playerScore === match.computerScore;
-  const resultLabel = won ? 'I won' : tied ? 'Tied' : 'Computer won';
-  const line = [
-    'Rock Paper Scissors — ' + resultLabel,
-    match.playerScore + '–' + match.computerScore + (match.bestOf === 0 ? ' (infinite session)' : ' (best of ' + match.bestOf + ')'),
-    match.player ? 'Player: ' + match.player : '',
-  ].filter(Boolean).join('\n');
-  if (navigator.clipboard && navigator.clipboard.writeText) {
-    navigator.clipboard.writeText(line).then(function() {
-      showToast('Score copied to clipboard');
-    }).catch(function() {
-      showToast('Could not copy — select and copy manually');
-    });
-  } else {
-    showToast('Clipboard not available in this browser');
-  }
-});
-
 document.addEventListener('keydown', function(e) {
   if (!document.getElementById('screen-game').classList.contains('active')) return;
   const target = e.target;
